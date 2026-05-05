@@ -128,7 +128,19 @@ main {
   color: var(--color-ink);
 }
 
+.form-field select {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+}
+
 .form-field input:focus,
+.form-field select:focus,
 .button-primary:focus,
 .button-secondary:focus,
 .nav-link:focus {

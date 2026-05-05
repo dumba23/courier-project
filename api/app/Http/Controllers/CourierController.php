@@ -28,6 +28,7 @@ class CourierController extends Controller
             'last_name' => ['required', 'string', 'max:255'],
             'phone_number' => ['required', 'string', 'max:50'],
             'car_plate_number' => ['nullable', 'string', 'max:50'],
+            'tariff' => ['required', 'numeric', 'min:0'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
@@ -46,6 +47,7 @@ class CourierController extends Controller
                 'last_name' => $validated['last_name'],
                 'phone_number' => $validated['phone_number'],
                 'car_plate_number' => $validated['car_plate_number'] ?? null,
+                'tariff' => $validated['tariff'],
             ])->load(['user:id,email']);
         });
 
@@ -62,6 +64,7 @@ class CourierController extends Controller
             'last_name' => ['required', 'string', 'max:255'],
             'phone_number' => ['required', 'string', 'max:50'],
             'car_plate_number' => ['nullable', 'string', 'max:50'],
+            'tariff' => ['required', 'numeric', 'min:0'],
             'email' => [
                 'required',
                 'email',
@@ -85,6 +88,7 @@ class CourierController extends Controller
                 'last_name' => $validated['last_name'],
                 'phone_number' => $validated['phone_number'],
                 'car_plate_number' => $validated['car_plate_number'] ?? null,
+                'tariff' => $validated['tariff'],
             ]);
         });
 

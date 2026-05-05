@@ -6,14 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Courier extends Model
+class Partner extends Model
 {
     protected $fillable = [
         'user_id',
-        'first_name',
-        'last_name',
+        'name',
         'phone_number',
-        'car_plate_number',
+        'pickup_address',
         'tariff',
     ];
 
@@ -24,6 +23,6 @@ class Courier extends Model
 
     public function deliveryItems(): HasMany
     {
-        return $this->hasMany(DeliveryItem::class, 'assigned_courier_id');
+        return $this->hasMany(DeliveryItem::class);
     }
 }

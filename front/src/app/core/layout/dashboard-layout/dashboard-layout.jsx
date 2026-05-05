@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { apiRequest } from '../../http/api.js'
+import { CloseIcon } from '../../ui/icons.jsx'
 import './dashboard-layout.scss'
 
 export function DashboardLayout({ auth, onAuthChange }) {
   const navigate = useNavigate()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const isAdmin = auth?.user?.role === 'admin'
 
   async function handleLogout() {
     try {
@@ -55,15 +57,44 @@ export function DashboardLayout({ auth, onAuthChange }) {
       </header>
 
       <aside className="dashboard-layout__sidebar">
-        <div className="dashboard-layout__sidebar-title">Navigation</div>
+        <div className="dashboard-layout__sidebar-head">
+          <div className="dashboard-layout__sidebar-title">Navigation</div>
+          <button
+            type="button"
+            className="button-secondary icon-button dashboard-layout__sidebar-close"
+            aria-label="Close sidebar"
+            title="Close sidebar"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <CloseIcon className="action-icon" />
+          </button>
+        </div>
         <nav className="dashboard-layout__sidebar-nav">
           <NavLink
             className="nav-link nav-link--sidebar"
-            to="/couriers"
+            to="/delivery-items"
             onClick={() => setIsSidebarOpen(false)}
           >
-            Couriers
+            Deliveries
           </NavLink>
+          {isAdmin ? (
+            <>
+              <NavLink
+                className="nav-link nav-link--sidebar"
+                to="/couriers"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                Couriers
+              </NavLink>
+              <NavLink
+                className="nav-link nav-link--sidebar"
+                to="/partners"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                Partners
+              </NavLink>
+            </>
+          ) : null}
         </nav>
       </aside>
 

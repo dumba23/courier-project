@@ -76,3 +76,77 @@ export function CloseIcon(props) {
     </svg>
   )
 }
+
+export function InfoIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M12 10.5v5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="7.5" r="1" fill="currentColor" />
+    </svg>
+  )
+}
+
+export function ChevronLeftIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <path
+        d="m14.5 6.5-5 5.5 5 5.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+export function ChevronRightIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <path
+        d="m9.5 6.5 5 5.5-5 5.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+export function CalendarIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <path
+        d="M7 4.5v3M17 4.5v3M4.5 9.5h15"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <rect
+        x="4.5"
+        y="6.5"
+        width="15"
+        height="13"
+        rx="2.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+    </svg>
+  )
+}
+
+export function ColumnsIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <rect x="4.5" y="5.5" width="5" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="14.5" y="5.5" width="5" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  )
+}

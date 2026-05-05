@@ -75,4 +75,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(Courier::class);
     }
+
+    public function partner(): HasOne
+    {
+        return $this->hasOne(Partner::class);
+    }
 }

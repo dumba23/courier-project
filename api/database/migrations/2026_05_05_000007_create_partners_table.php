@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('couriers', function (Blueprint $table): void {
+        Schema::create('partners', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete()->unique();
-            $table->string('first_name');
-            $table->string('last_name');
+            $table->string('name');
             $table->string('phone_number');
-            $table->string('car_plate_number')->nullable();
+            $table->string('pickup_address', 1000);
             $table->decimal('tariff', 10, 2);
             $table->timestamps();
         });
@@ -28,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('couriers');
+        Schema::dropIfExists('partners');
     }
 };

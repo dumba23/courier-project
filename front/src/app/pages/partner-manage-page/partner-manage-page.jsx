@@ -1,42 +1,39 @@
 import { useEffect, useState } from 'react'
-import { apiRequest } from '../../core/http/api.js'
-import { DataTable } from '../../core/ui/data-table.jsx'
 import {
   CheckIcon,
   CloseIcon,
-  EditIcon,
   PlusIcon,
 } from '../../core/ui/icons.jsx'
-import './courier-manage-page.scss'
+import { DataTable } from '../../core/ui/data-table.jsx'
+import { apiRequest } from '../../core/http/api.js'
+import './partner-manage-page.scss'
 
 const initialForm = {
-  first_name: '',
-  last_name: '',
-  phone_number: '',
-  car_plate_number: '',
-  tariff: '',
+  name: '',
   email: '',
+  phone_number: '',
+  pickup_address: '',
+  tariff: '',
   password: '',
   password_confirmation: '',
 }
 
-export function CourierManagePage({ auth }) {
-  const [couriers, setCouriers] = useState([])
+export function PartnerManagePage({ auth }) {
+  const [partners, setPartners] = useState([])
   const [form, setForm] = useState(initialForm)
-  const [editingCourierId, setEditingCourierId] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [status, setStatus] = useState({ type: '', message: '' })
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   useEffect(() => {
-    async function loadCouriers() {
+    async function loadPartners() {
       try {
-        const payload = await apiRequest('/api/couriers', {
+        const payload = await apiRequest('/api/partners', {
           token: auth?.token,
         })
 
-        setCouriers(payload.couriers ?? [])
+        setPartners(payload.partners ?? [])
       } catch (requestError) {
         setStatus({
           type: 'error',
@@ -47,7 +44,7 @@ export function CourierManagePage({ auth }) {
       }
     }
 
-    loadCouriers()
+    loadPartners()
   }, [auth?.token])
 
   function handleChange(event) {
@@ -61,24 +58,7 @@ export function CourierManagePage({ auth }) {
 
   function openCreateDialog() {
     setStatus({ type: '', message: '' })
-    setEditingCourierId(null)
     setForm(initialForm)
-    setIsDialogOpen(true)
-  }
-
-  function openEditDialog(courier) {
-    setStatus({ type: '', message: '' })
-    setEditingCourierId(courier.id)
-    setForm({
-      first_name: courier.first_name ?? '',
-      last_name: courier.last_name ?? '',
-      phone_number: courier.phone_number ?? '',
-      car_plate_number: courier.car_plate_number ?? '',
-      tariff: courier.tariff ?? '',
-      email: courier.user?.email ?? '',
-      password: '',
-      password_confirmation: '',
-    })
     setIsDialogOpen(true)
   }
 
@@ -88,7 +68,6 @@ export function CourierManagePage({ auth }) {
     }
 
     setIsDialogOpen(false)
-    setEditingCourierId(null)
     setForm(initialForm)
   }
 
@@ -97,38 +76,19 @@ export function CourierManagePage({ auth }) {
     setIsSubmitting(true)
     setStatus({ type: '', message: '' })
 
-    const isEditing = Boolean(editingCourierId)
-
     try {
-      const payload = await apiRequest(
-        isEditing ? `/api/couriers/${editingCourierId}` : '/api/couriers',
-        {
-          method: isEditing ? 'PUT' : 'POST',
-          token: auth?.token,
-          body: JSON.stringify({
-            ...form,
-            password: form.password || null,
-            password_confirmation: form.password_confirmation || null,
-          }),
-        },
-      )
+      const payload = await apiRequest('/api/partners', {
+        method: 'POST',
+        token: auth?.token,
+        body: JSON.stringify(form),
+      })
 
-      if (isEditing) {
-        setCouriers((current) =>
-          current.map((courier) =>
-            courier.id === payload.courier.id ? payload.courier : courier,
-          ),
-        )
-      } else {
-        setCouriers((current) => [payload.courier, ...current])
-      }
-
+      setPartners((current) => [payload.partner, ...current])
       setForm(initialForm)
-      setEditingCourierId(null)
       setIsDialogOpen(false)
       setStatus({
         type: 'success',
-        message: isEditing ? 'Courier updated.' : 'Courier created.',
+        message: 'Partner created.',
       })
     } catch (requestError) {
       setStatus({
@@ -140,18 +100,16 @@ export function CourierManagePage({ auth }) {
     }
   }
 
-  const isEditing = Boolean(editingCourierId)
-
   return (
-    <section className="courier-manage-page">
-      <header className="courier-manage-page__header">
-        <h2 className="page-title">Couriers</h2>
+    <section className="partner-manage-page">
+      <header className="partner-manage-page__header">
+        <h2 className="page-title">Partners</h2>
         <button
           type="button"
           className="button-primary icon-button"
           onClick={openCreateDialog}
-          aria-label="Add courier"
-          title="Add courier"
+          aria-label="Add partner"
+          title="Add partner"
         >
           <PlusIcon className="action-icon" />
         </button>
@@ -167,27 +125,16 @@ export function CourierManagePage({ auth }) {
         <p className="status-message">Loading...</p>
       ) : (
         <DataTable
-          tableClassName="courier-table"
-          headers={['Name', 'Email', 'Phone', 'Plate', 'Tariff', '']}
-          emptyMessage="No couriers."
-          rows={couriers.map((courier) => (
-            <tr key={courier.id}>
-              <td>{courier.first_name} {courier.last_name}</td>
-              <td>{courier.user?.email}</td>
-              <td>{courier.phone_number}</td>
-              <td>{courier.car_plate_number || '-'}</td>
-              <td>{courier.tariff}</td>
-              <td className="courier-table__actions">
-                <button
-                  type="button"
-                  className="button-secondary courier-table__edit icon-button"
-                  onClick={() => openEditDialog(courier)}
-                  aria-label={`Edit ${courier.first_name} ${courier.last_name}`}
-                  title={`Edit ${courier.first_name} ${courier.last_name}`}
-                >
-                  <EditIcon className="action-icon" />
-                </button>
-              </td>
+          tableClassName="partner-table"
+          headers={['Name', 'Email', 'Phone', 'Pickup address', 'Tariff']}
+          emptyMessage="No partners."
+          rows={partners.map((partner) => (
+            <tr key={partner.id}>
+              <td>{partner.name}</td>
+              <td>{partner.user?.email}</td>
+              <td>{partner.phone_number}</td>
+              <td>{partner.pickup_address}</td>
+              <td>{partner.tariff}</td>
             </tr>
           ))}
         />
@@ -199,53 +146,35 @@ export function CourierManagePage({ auth }) {
             className="dialog-panel panel"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="courier-manage-page__dialog-head">
-              <h3>{isEditing ? 'Edit courier' : 'Add courier'}</h3>
-              <p>
-                {isEditing
-                  ? 'Leave password empty to keep the current password.'
-                  : 'Set the password for this courier account.'}
-              </p>
+            <div className="partner-manage-page__dialog-head">
+              <h3>Add partner</h3>
             </div>
 
-            <form className="courier-manage-page__form" onSubmit={handleSubmit}>
-              <div className="field-grid courier-manage-page__form-grid">
+            <form className="partner-manage-page__form" onSubmit={handleSubmit}>
+              <div className="field-grid partner-manage-page__form-grid">
                 <label className="form-field">
-                  First name
+                  Name
+                  <input name="name" value={form.name} onChange={handleChange} required />
+                </label>
+
+                <label className="form-field">
+                  Email
                   <input
-                    name="first_name"
-                    value={form.first_name}
+                    name="email"
+                    type="email"
+                    value={form.email}
                     onChange={handleChange}
                     required
                   />
                 </label>
 
                 <label className="form-field">
-                  Last name
-                  <input
-                    name="last_name"
-                    value={form.last_name}
-                    onChange={handleChange}
-                    required
-                  />
-                </label>
-
-                <label className="form-field">
-                  Phone number
+                  Phone
                   <input
                     name="phone_number"
                     value={form.phone_number}
                     onChange={handleChange}
                     required
-                  />
-                </label>
-
-                <label className="form-field">
-                  Car plate number
-                  <input
-                    name="car_plate_number"
-                    value={form.car_plate_number}
-                    onChange={handleChange}
                   />
                 </label>
 
@@ -262,12 +191,11 @@ export function CourierManagePage({ auth }) {
                   />
                 </label>
 
-                <label className="form-field">
-                  Email
+                <label className="form-field partner-manage-page__full">
+                  Pickup address
                   <input
-                    name="email"
-                    type="email"
-                    value={form.email}
+                    name="pickup_address"
+                    value={form.pickup_address}
                     onChange={handleChange}
                     required
                   />
@@ -280,7 +208,7 @@ export function CourierManagePage({ auth }) {
                     type="password"
                     value={form.password}
                     onChange={handleChange}
-                    required={!isEditing}
+                    required
                   />
                 </label>
 
@@ -291,7 +219,7 @@ export function CourierManagePage({ auth }) {
                     type="password"
                     value={form.password_confirmation}
                     onChange={handleChange}
-                    required={!isEditing && Boolean(form.password)}
+                    required
                   />
                 </label>
               </div>
@@ -300,7 +228,7 @@ export function CourierManagePage({ auth }) {
                 <p className="status-message is-error">{status.message}</p>
               ) : null}
 
-              <div className="courier-manage-page__actions">
+              <div className="partner-manage-page__actions">
                 <button
                   type="button"
                   className="button-secondary icon-button"
@@ -315,8 +243,8 @@ export function CourierManagePage({ auth }) {
                   type="submit"
                   className="button-primary icon-button"
                   disabled={isSubmitting}
-                  aria-label={isEditing ? 'Update courier' : 'Save courier'}
-                  title={isEditing ? 'Update courier' : 'Save courier'}
+                  aria-label="Save partner"
+                  title="Save partner"
                 >
                   {!isSubmitting ? <CheckIcon className="action-icon" /> : null}
                   {isSubmitting ? <span className="icon-button__status" /> : null}
