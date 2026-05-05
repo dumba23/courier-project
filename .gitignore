@@ -1,0 +1,33 @@
+# macOS / editors
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# root backups
+*.local
+
+# frontend
+front/node_modules/
+front/dist/
+front/dist-ssr/
+front/logs/
+front/*.log
+front/npm-debug.log*
+front/yarn-debug.log*
+front/yarn-error.log*
+front/pnpm-debug.log*
+front/lerna-debug.log*
+
+# backend
+api/.env
+api/vendor/
+api/node_modules/
+api/public/hot
+api/public/storage
+api/storage/*.key
