@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DeliveryItem extends Model
 {
+    public const STATUS_NEW_ITEM = 'new_item';
     public const STATUS_DELIVERED = 'delivered';
     public const STATUS_CANCELED = 'canceled';
     public const STATUS_POSTPONEMENT = 'postponement';
@@ -55,6 +56,7 @@ class DeliveryItem extends Model
     public static function statusLabels(): array
     {
         return [
+            self::STATUS_NEW_ITEM => 'New item',
             self::STATUS_DELIVERED => 'Delivered',
             self::STATUS_CANCELED => 'Canceled',
             self::STATUS_POSTPONEMENT => 'Postponement',

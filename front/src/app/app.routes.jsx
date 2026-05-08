@@ -3,6 +3,7 @@ import { AuthGuard } from './core/auth/auth.guard.jsx'
 import { DashboardLayout } from './core/layout/dashboard-layout/dashboard-layout.jsx'
 import { CourierManagePage } from './pages/courier-manage-page/courier-manage-page.jsx'
 import { DeliveryItemsPage } from './pages/delivery-items-page/delivery-items-page.jsx'
+import { DeliveryZonesPage } from './pages/delivery-zones-page/delivery-zones-page.jsx'
 import { LoginPage } from './pages/login-page/login-page.jsx'
 import { PartnerManagePage } from './pages/partner-manage-page/partner-manage-page.jsx'
 
@@ -39,6 +40,10 @@ export function AppRoutes({ auth, onAuthChange }) {
         <Route
           path="partners"
           element={auth?.user?.role === 'admin' ? <PartnerManagePage auth={auth} /> : <Navigate to="/delivery-items" replace />}
+        />
+        <Route
+          path="delivery-zones"
+          element={auth?.user?.role === 'admin' ? <DeliveryZonesPage auth={auth} /> : <Navigate to="/delivery-items" replace />}
         />
       </Route>
       <Route

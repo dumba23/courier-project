@@ -93,6 +93,13 @@ export function DashboardLayout({ auth, onAuthChange }) {
               >
                 Partners
               </NavLink>
+              <NavLink
+                className="nav-link nav-link--sidebar"
+                to="/delivery-zones"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                Zones
+              </NavLink>
             </>
           ) : null}
         </nav>

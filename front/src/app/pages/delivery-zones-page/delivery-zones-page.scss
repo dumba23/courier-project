@@ -1,0 +1,139 @@
+.delivery-zones-page {
+  display: grid;
+  gap: 14px;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__dialog-head {
+    margin-bottom: 16px;
+
+    h3 {
+      margin: 0;
+      color: var(--color-ink);
+      font-size: 1.1rem;
+    }
+  }
+
+  &__form {
+    display: grid;
+    gap: 16px;
+  }
+
+  &__form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  &__full {
+    @media (min-width: 768px) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__hint {
+    margin: 0;
+    color: var(--color-copy);
+    font-size: 0.92rem;
+  }
+
+  &__courier-list {
+    display: grid;
+    gap: 10px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-surface);
+  }
+
+  &__courier-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-ink);
+    font-weight: 500;
+
+    input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--color-ink);
+    }
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 160px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font: inherit;
+    resize: vertical;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+}
+
+.delivery-zones-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: top;
+  }
+
+  th {
+    color: var(--color-copy);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--color-panel-strong);
+  }
+
+  td {
+    color: var(--color-ink);
+  }
+
+  &__coordinates {
+    min-width: 420px;
+    word-break: break-word;
+  }
+
+  &__actions {
+    width: 1%;
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+@media (min-width: 768px) {
+  .delivery-zones-page {
+    gap: 16px;
+
+    &__form-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}

@@ -150,3 +150,23 @@ export function ColumnsIcon(props) {
     </svg>
   )
 }
+
+export function DownloadIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <path d="M12 4.5v10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="m8 11.5 4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 18.5h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+export function UploadIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <path d="M12 19.5v-10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="m8 12.5 4-4 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 5.5h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
