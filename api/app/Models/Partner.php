@@ -14,7 +14,17 @@ class Partner extends Model
         'phone_number',
         'pickup_address',
         'tariff',
+        'tariff_per_kg',
+        'tariff_per_kg_ranges',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'tariff_per_kg' => 'boolean',
+            'tariff_per_kg_ranges' => 'array',
+        ];
+    }
 
     public function user(): BelongsTo
     {

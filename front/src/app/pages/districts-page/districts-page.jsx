@@ -2,37 +2,33 @@ import { useEffect, useState } from 'react'
 import { CheckIcon, CloseIcon, EditIcon, PlusIcon } from '../../core/ui/icons.jsx'
 import { DataTable } from '../../core/ui/data-table.jsx'
 import { apiRequest } from '../../core/http/api.js'
-import './delivery-zones-page.scss'
+import './districts-page.scss'
 
 const initialForm = {
   name: '',
-  coordinates: '',
   courier_ids: [],
+  is_active: true,
 }
 
-export function DeliveryZonesPage({ auth }) {
-  const [zones, setZones] = useState([])
+export function DistrictsPage({ auth }) {
+  const [districts, setDistricts] = useState([])
   const [couriers, setCouriers] = useState([])
   const [form, setForm] = useState(initialForm)
-  const [editingZoneId, setEditingZoneId] = useState(null)
+  const [editingDistrictId, setEditingDistrictId] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [status, setStatus] = useState({ type: '', message: '' })
 
   useEffect(() => {
-    async function loadZones() {
+    async function loadDistricts() {
       try {
-        const [zonesPayload, couriersPayload] = await Promise.all([
-          apiRequest('/api/delivery-zones', {
-            token: auth?.token,
-          }),
-          apiRequest('/api/couriers', {
-            token: auth?.token,
-          }),
+        const [districtsPayload, couriersPayload] = await Promise.all([
+          apiRequest('/api/districts', { token: auth?.token }),
+          apiRequest('/api/couriers', { token: auth?.token }),
         ])
 
-        setZones(zonesPayload.delivery_zones ?? [])
+        setDistricts(districtsPayload.districts ?? [])
         setCouriers(couriersPayload.couriers ?? [])
       } catch (requestError) {
         setStatus({
@@ -44,15 +40,15 @@ export function DeliveryZonesPage({ auth }) {
       }
     }
 
-    loadZones()
+    loadDistricts()
   }, [auth?.token])
 
   function handleChange(event) {
-    const { name, value } = event.target
+    const { name, value, type, checked } = event.target
 
     setForm((current) => ({
       ...current,
-      [name]: value,
+      [name]: type === 'checkbox' ? checked : value,
     }))
   }
 
@@ -71,18 +67,18 @@ export function DeliveryZonesPage({ auth }) {
   }
 
   function openCreateDialog() {
-    setEditingZoneId(null)
+    setEditingDistrictId(null)
     setForm(initialForm)
     setStatus({ type: '', message: '' })
     setIsDialogOpen(true)
   }
 
-  function openEditDialog(zone) {
-    setEditingZoneId(zone.id)
+  function openEditDialog(district) {
+    setEditingDistrictId(district.id)
     setForm({
-      name: zone.name,
-      coordinates: zone.coordinates,
-      courier_ids: (zone.courier_ids ?? []).map(String),
+      name: district.name,
+      courier_ids: (district.courier_ids ?? []).map(String),
+      is_active: district.is_active ?? true,
     })
     setStatus({ type: '', message: '' })
     setIsDialogOpen(true)
@@ -94,7 +90,7 @@ export function DeliveryZonesPage({ auth }) {
     }
 
     setIsDialogOpen(false)
-    setEditingZoneId(null)
+    setEditingDistrictId(null)
     setForm(initialForm)
   }
 
@@ -105,30 +101,30 @@ export function DeliveryZonesPage({ auth }) {
 
     try {
       const payload = await apiRequest(
-        editingZoneId ? `/api/delivery-zones/${editingZoneId}` : '/api/delivery-zones',
+        editingDistrictId ? `/api/districts/${editingDistrictId}` : '/api/districts',
         {
-          method: editingZoneId ? 'PUT' : 'POST',
+          method: editingDistrictId ? 'PUT' : 'POST',
           token: auth?.token,
           body: JSON.stringify(form),
         },
       )
 
-      setZones((current) => {
-        if (!editingZoneId) {
-          return [payload.delivery_zone, ...current]
+      setDistricts((current) => {
+        if (!editingDistrictId) {
+          return [payload.district, ...current]
         }
 
-        return current.map((zone) => (
-          zone.id === editingZoneId ? payload.delivery_zone : zone
+        return current.map((district) => (
+          district.id === editingDistrictId ? payload.district : district
         ))
       })
 
       setIsDialogOpen(false)
-      setEditingZoneId(null)
+      setEditingDistrictId(null)
       setForm(initialForm)
       setStatus({
         type: 'success',
-        message: editingZoneId ? 'Delivery zone updated.' : 'Delivery zone created.',
+        message: editingDistrictId ? 'District updated.' : 'District created.',
       })
     } catch (requestError) {
       setStatus({
@@ -141,15 +137,15 @@ export function DeliveryZonesPage({ auth }) {
   }
 
   return (
-    <section className="delivery-zones-page">
-      <header className="delivery-zones-page__header">
-        <h2 className="page-title">Delivery zones</h2>
+    <section className="districts-page">
+      <header className="districts-page__header">
+        <h2 className="page-title">Districts</h2>
         <button
           type="button"
           className="button-primary icon-button"
           onClick={openCreateDialog}
-          aria-label="Add delivery zone"
-          title="Add delivery zone"
+          aria-label="Add district"
+          title="Add district"
         >
           <PlusIcon className="action-icon" />
         </button>
@@ -165,21 +161,21 @@ export function DeliveryZonesPage({ auth }) {
         <p className="status-message">Loading...</p>
       ) : (
         <DataTable
-          tableClassName="delivery-zones-table"
-          headers={['Name', 'Coordinates', 'Couriers', '']}
-          emptyMessage="No delivery zones."
-          rows={zones.map((zone) => (
-            <tr key={zone.id}>
-              <td>{zone.name}</td>
-              <td className="delivery-zones-table__coordinates">{zone.coordinates}</td>
-              <td>{zone.couriers?.length ? zone.couriers.map((courier) => courier.name).join(', ') : '-'}</td>
-              <td className="delivery-zones-table__actions">
+          tableClassName="districts-table"
+          headers={['Name', 'Couriers', 'Status', '']}
+          emptyMessage="No districts."
+          rows={districts.map((district) => (
+            <tr key={district.id}>
+              <td>{district.name}</td>
+              <td>{district.couriers?.length ? district.couriers.map((courier) => courier.name).join(', ') : '-'}</td>
+              <td>{district.is_active ? 'Active' : 'Inactive'}</td>
+              <td className="districts-table__actions">
                 <button
                   type="button"
                   className="button-secondary icon-button"
-                  onClick={() => openEditDialog(zone)}
-                  aria-label="Edit delivery zone"
-                  title="Edit delivery zone"
+                  onClick={() => openEditDialog(district)}
+                  aria-label="Edit district"
+                  title="Edit district"
                 >
                   <EditIcon className="action-icon" />
                 </button>
@@ -195,12 +191,12 @@ export function DeliveryZonesPage({ auth }) {
             className="dialog-panel panel"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="delivery-zones-page__dialog-head">
-              <h3>{editingZoneId ? 'Edit delivery zone' : 'Add delivery zone'}</h3>
+            <div className="districts-page__dialog-head">
+              <h3>{editingDistrictId ? 'Edit district' : 'Add district'}</h3>
             </div>
 
-            <form className="delivery-zones-page__form" onSubmit={handleSubmit}>
-              <div className="field-grid delivery-zones-page__form-grid">
+            <form className="districts-page__form" onSubmit={handleSubmit}>
+              <div className="field-grid districts-page__form-grid">
                 <label className="form-field">
                   Name
                   <input
@@ -211,27 +207,25 @@ export function DeliveryZonesPage({ auth }) {
                   />
                 </label>
 
-                <label className="form-field delivery-zones-page__full">
-                  Coordinates
-                  <textarea
-                    name="coordinates"
-                    value={form.coordinates}
+                <label className="form-field districts-page__toggle">
+                  <span>Active</span>
+                  <input
+                    type="checkbox"
+                    name="is_active"
+                    checked={form.is_active}
                     onChange={handleChange}
-                    rows="7"
-                    placeholder="44.7161736,41.7262716; 44.7173753,41.716534; 44.7587456,41.7175591"
-                    required
                   />
                 </label>
 
-                <div className="form-field delivery-zones-page__full">
+                <div className="form-field districts-page__full">
                   Couriers
-                  <div className="delivery-zones-page__courier-list">
+                  <div className="districts-page__courier-list">
                     {couriers.map((courier) => {
                       const courierName = `${courier.first_name} ${courier.last_name}`
                       const courierId = String(courier.id)
 
                       return (
-                        <label key={courier.id} className="delivery-zones-page__courier-option">
+                        <label key={courier.id} className="districts-page__courier-option">
                           <input
                             type="checkbox"
                             checked={form.courier_ids.includes(courierId)}
@@ -245,15 +239,11 @@ export function DeliveryZonesPage({ auth }) {
                 </div>
               </div>
 
-              <p className="delivery-zones-page__hint">
-                Use `lng,lat` pairs separated by semicolons or new lines. The polygon will be closed automatically.
-              </p>
-
               {status.type === 'error' && status.message ? (
                 <p className="status-message is-error">{status.message}</p>
               ) : null}
 
-              <div className="delivery-zones-page__actions">
+              <div className="districts-page__actions">
                 <button
                   type="button"
                   className="button-secondary icon-button"
@@ -268,8 +258,8 @@ export function DeliveryZonesPage({ auth }) {
                   type="submit"
                   className="button-primary icon-button"
                   disabled={isSubmitting}
-                  aria-label="Save delivery zone"
-                  title="Save delivery zone"
+                  aria-label="Save district"
+                  title="Save district"
                 >
                   {!isSubmitting ? <CheckIcon className="action-icon" /> : null}
                   {isSubmitting ? <span className="icon-button__status" /> : null}

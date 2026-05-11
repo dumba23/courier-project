@@ -30,6 +30,8 @@ class AuthController extends Controller
             $user->isAdmin() ? ['*'] : [$user->role],
         );
 
+        $user->loadMissing(['partner:id,user_id,tariff_per_kg,tariff_per_kg_ranges', 'courier:id,user_id']);
+
         return response()->json([
             'token' => $token->plainTextToken,
             'user' => $user,
@@ -39,7 +41,7 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         return response()->json([
-            'user' => $request->user(),
+            'user' => $request->user()->loadMissing(['partner:id,user_id,tariff_per_kg,tariff_per_kg_ranges', 'courier:id,user_id']),
         ]);
     }
 

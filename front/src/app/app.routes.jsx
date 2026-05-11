@@ -2,10 +2,14 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthGuard } from './core/auth/auth.guard.jsx'
 import { DashboardLayout } from './core/layout/dashboard-layout/dashboard-layout.jsx'
 import { CourierManagePage } from './pages/courier-manage-page/courier-manage-page.jsx'
+import { CourierPayrollPage } from './pages/courier-payroll-page/courier-payroll-page.jsx'
+import { CourierCommentTemplatesPage } from './pages/courier-comment-templates-page/courier-comment-templates-page.jsx'
 import { DeliveryItemsPage } from './pages/delivery-items-page/delivery-items-page.jsx'
-import { DeliveryZonesPage } from './pages/delivery-zones-page/delivery-zones-page.jsx'
+import { DistrictsPage } from './pages/districts-page/districts-page.jsx'
+import { DistrictStreetsPage } from './pages/district-streets-page/district-streets-page.jsx'
 import { LoginPage } from './pages/login-page/login-page.jsx'
 import { PartnerManagePage } from './pages/partner-manage-page/partner-manage-page.jsx'
+import { PartnerPayrollPage } from './pages/partner-payroll-page/partner-payroll-page.jsx'
 
 function getDefaultRoute(auth) {
   return auth?.user?.role === 'admin' ? '/couriers' : '/delivery-items'
@@ -36,14 +40,31 @@ export function AppRoutes({ auth, onAuthChange }) {
           path="couriers"
           element={auth?.user?.role === 'admin' ? <CourierManagePage auth={auth} /> : <Navigate to="/delivery-items" replace />}
         />
-        <Route path="delivery-items" element={<DeliveryItemsPage auth={auth} />} />
+        <Route
+          path="courier-payroll"
+          element={auth?.user?.role === 'admin' ? <CourierPayrollPage auth={auth} /> : <Navigate to="/delivery-items" replace />}
+        />
+        <Route
+          path="partner-payroll"
+          element={auth?.user?.role === 'admin' ? <PartnerPayrollPage auth={auth} /> : <Navigate to="/delivery-items" replace />}
+        />
+        <Route
+          path="courier-comment-templates"
+          element={auth?.user?.role === 'admin' ? <CourierCommentTemplatesPage auth={auth} /> : <Navigate to="/delivery-items" replace />}
+        />
+        <Route path="delivery-items" element={<DeliveryItemsPage auth={auth} viewScope="active" />} />
+        <Route path="canceled-delivery-items" element={<DeliveryItemsPage auth={auth} viewScope="canceled" />} />
         <Route
           path="partners"
           element={auth?.user?.role === 'admin' ? <PartnerManagePage auth={auth} /> : <Navigate to="/delivery-items" replace />}
         />
         <Route
-          path="delivery-zones"
-          element={auth?.user?.role === 'admin' ? <DeliveryZonesPage auth={auth} /> : <Navigate to="/delivery-items" replace />}
+          path="districts"
+          element={auth?.user?.role === 'admin' ? <DistrictsPage auth={auth} /> : <Navigate to="/delivery-items" replace />}
+        />
+        <Route
+          path="district-streets"
+          element={auth?.user?.role === 'admin' ? <DistrictStreetsPage auth={auth} /> : <Navigate to="/delivery-items" replace />}
         />
       </Route>
       <Route

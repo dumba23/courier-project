@@ -77,6 +77,13 @@ export function DashboardLayout({ auth, onAuthChange }) {
           >
             Deliveries
           </NavLink>
+          <NavLink
+            className="nav-link nav-link--sidebar"
+            to="/canceled-delivery-items"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            Canceled
+          </NavLink>
           {isAdmin ? (
             <>
               <NavLink
@@ -95,10 +102,38 @@ export function DashboardLayout({ auth, onAuthChange }) {
               </NavLink>
               <NavLink
                 className="nav-link nav-link--sidebar"
-                to="/delivery-zones"
+                to="/courier-payroll"
                 onClick={() => setIsSidebarOpen(false)}
               >
-                Zones
+                Courier payroll
+              </NavLink>
+              <NavLink
+                className="nav-link nav-link--sidebar"
+                to="/partner-payroll"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                Partner payroll
+              </NavLink>
+              <NavLink
+                className="nav-link nav-link--sidebar"
+                to="/courier-comment-templates"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                Comment templates
+              </NavLink>
+              <NavLink
+                className="nav-link nav-link--sidebar"
+                to="/districts"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                Districts
+              </NavLink>
+              <NavLink
+                className="nav-link nav-link--sidebar"
+                to="/district-streets"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                Streets
               </NavLink>
             </>
           ) : null}

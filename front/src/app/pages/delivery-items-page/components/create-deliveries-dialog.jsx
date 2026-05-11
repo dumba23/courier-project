@@ -1,7 +1,8 @@
-import { CloseIcon, PlusIcon, TrashIcon } from '../../../core/ui/icons.jsx'
+import { CloseIcon, PlusIcon, TrashIcon } from "../../../core/ui/icons.jsx";
 
 export function CreateDeliveriesDialog({
   draftItems,
+  isTariffPerKgItem,
   isAdmin,
   isSubmitting,
   onAddRow,
@@ -52,6 +53,7 @@ export function CreateDeliveriesDialog({
                   <th>Product</th>
                   <th>Customer</th>
                   <th>Phone</th>
+                  <th>City</th>
                   <th>Address</th>
                   <th>Price</th>
                   <th>Comment</th>
@@ -67,7 +69,13 @@ export function CreateDeliveriesDialog({
                       <td>
                         <select
                           value={item.partner_id}
-                          onChange={(event) => onUpdateItem(index, 'partner_id', event.target.value)}
+                          onChange={(event) =>
+                            onUpdateItem(
+                              index,
+                              "partner_id",
+                              event.target.value,
+                            )
+                          }
                           required
                         >
                           <option value="">Partner</option>
@@ -81,16 +89,24 @@ export function CreateDeliveriesDialog({
                     ) : null}
                     <td>
                       <input
+                        type={isTariffPerKgItem(item) ? "number" : "text"}
+                        min={isTariffPerKgItem(item) ? "0" : undefined}
+                        step={isTariffPerKgItem(item) ? "0.01" : undefined}
+                        inputMode={isTariffPerKgItem(item) ? "decimal" : undefined}
                         value={item.product}
-                        onChange={(event) => onUpdateItem(index, 'product', event.target.value)}
-                        placeholder="Product"
+                        onChange={(event) =>
+                          onUpdateItem(index, "product", event.target.value)
+                        }
+                        placeholder={isTariffPerKgItem(item) ? "Weight / decimal" : "Product"}
                         required
                       />
                     </td>
                     <td>
                       <input
                         value={item.person_name}
-                        onChange={(event) => onUpdateItem(index, 'person_name', event.target.value)}
+                        onChange={(event) =>
+                          onUpdateItem(index, "person_name", event.target.value)
+                        }
                         placeholder="Customer"
                         required
                       />
@@ -98,15 +114,28 @@ export function CreateDeliveriesDialog({
                     <td>
                       <input
                         value={item.phone}
-                        onChange={(event) => onUpdateItem(index, 'phone', event.target.value)}
+                        onChange={(event) =>
+                          onUpdateItem(index, "phone", event.target.value)
+                        }
                         placeholder="Phone"
                         required
                       />
                     </td>
                     <td>
                       <input
+                        value={item.city}
+                        onChange={(event) =>
+                          onUpdateItem(index, "city", event.target.value)
+                        }
+                        placeholder="City"
+                      />
+                    </td>
+                    <td>
+                      <input
                         value={item.address}
-                        onChange={(event) => onUpdateItem(index, 'address', event.target.value)}
+                        onChange={(event) =>
+                          onUpdateItem(index, "address", event.target.value)
+                        }
                         placeholder="Address"
                         required
                       />
@@ -117,7 +146,9 @@ export function CreateDeliveriesDialog({
                         min="0"
                         step="0.01"
                         value={item.price}
-                        onChange={(event) => onUpdateItem(index, 'price', event.target.value)}
+                        onChange={(event) =>
+                          onUpdateItem(index, "price", event.target.value)
+                        }
                         placeholder="Price"
                         required
                       />
@@ -125,7 +156,9 @@ export function CreateDeliveriesDialog({
                     <td>
                       <input
                         value={item.comment}
-                        onChange={(event) => onUpdateItem(index, 'comment', event.target.value)}
+                        onChange={(event) =>
+                          onUpdateItem(index, "comment", event.target.value)
+                        }
                         placeholder="Comment"
                       />
                     </td>
@@ -133,7 +166,13 @@ export function CreateDeliveriesDialog({
                       <input
                         type="date"
                         value={item.delivery_date}
-                        onChange={(event) => onUpdateItem(index, 'delivery_date', event.target.value)}
+                        onChange={(event) =>
+                          onUpdateItem(
+                            index,
+                            "delivery_date",
+                            event.target.value,
+                          )
+                        }
                         required
                       />
                     </td>
@@ -175,5 +214,5 @@ export function CreateDeliveriesDialog({
         </form>
       </section>
     </div>
-  )
+  );
 }

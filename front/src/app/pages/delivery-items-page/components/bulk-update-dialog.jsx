@@ -1,5 +1,6 @@
 import { CloseIcon } from '../../../core/ui/icons.jsx'
 import {
+  BULK_ACTION_ACTUAL_DELIVERY_DATE,
   BULK_ACTION_COURIER,
   BULK_ACTION_DELIVERY_DATE,
   BULK_ACTION_STATUS,
@@ -14,6 +15,7 @@ export function BulkUpdateDialog({
   metaTotal,
   onClose,
   onSubmit,
+  statusOptions,
   onValueChange,
 }) {
   const bulkDialogTitle = bulkDialogType === BULK_ACTION_STATUS
@@ -22,7 +24,9 @@ export function BulkUpdateDialog({
       ? 'Update filtered courier'
     : bulkDialogType === BULK_ACTION_DELIVERY_DATE
       ? 'Update filtered delivery date'
-      : 'Update filtered actual date'
+      : bulkDialogType === BULK_ACTION_ACTUAL_DELIVERY_DATE
+        ? 'Update filtered completion date'
+      : 'Update filtered return date'
 
   return (
     <div className="dialog-backdrop" onClick={onClose}>
@@ -54,7 +58,7 @@ export function BulkUpdateDialog({
             <label className="form-field">
               Status
               <select value={bulkValue} onChange={(event) => onValueChange(event.target.value)} required>
-                {STATUS_OPTIONS.map(([status, label]) => (
+                {statusOptions.map(([status, label]) => (
                   <option key={status} value={status}>
                     {label}
                   </option>

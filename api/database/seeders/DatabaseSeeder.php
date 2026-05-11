@@ -147,7 +147,7 @@ class DatabaseSeeder extends Seeder
                 'person_name' => 'Salome Nozadze',
                 'delivery_status' => DeliveryItem::STATUS_NEW_ITEM,
                 'delivery_date' => now()->addDay()->toDateString(),
-                'actual_delivery_date' => null,
+                'return_date' => null,
             ],
             [
                 'partner_email' => env('DEMO_PARTNER_EMAIL', 'partner@courier.test'),
@@ -161,7 +161,7 @@ class DatabaseSeeder extends Seeder
                 'person_name' => 'Nino Beridze',
                 'delivery_status' => DeliveryItem::STATUS_DELIVERED,
                 'delivery_date' => now()->toDateString(),
-                'actual_delivery_date' => now()->setTime(15, 20),
+                'return_date' => null,
             ],
             [
                 'partner_email' => 'partner2@courier.test',
@@ -175,7 +175,35 @@ class DatabaseSeeder extends Seeder
                 'person_name' => 'Giorgi Lomidze',
                 'delivery_status' => DeliveryItem::STATUS_CANCELED,
                 'delivery_date' => now()->addDay()->toDateString(),
-                'actual_delivery_date' => null,
+                'return_date' => null,
+            ],
+            [
+                'partner_email' => 'partner2@courier.test',
+                'courier_email' => env('DEMO_COURIER_EMAIL', 'courier@courier.test'),
+                'address' => 'Vake, Paliashvili Street 14',
+                'district' => 'Vake',
+                'phone' => '+995555100010',
+                'price' => 20.00,
+                'comment' => 'Item should be accepted back from customer.',
+                'product' => 'Returned accessories',
+                'person_name' => 'Mariam Gventsadze',
+                'delivery_status' => DeliveryItem::STATUS_RECEIVABLE,
+                'delivery_date' => now()->toDateString(),
+                'return_date' => null,
+            ],
+            [
+                'partner_email' => 'partner3@courier.test',
+                'courier_email' => 'courier2@courier.test',
+                'address' => 'Didube, Aghmashenebeli Alley 7',
+                'district' => 'Didube',
+                'phone' => '+995555100011',
+                'price' => 31.00,
+                'comment' => 'Item was received back from customer.',
+                'product' => 'Returned device',
+                'person_name' => 'Zura Shengelia',
+                'delivery_status' => DeliveryItem::STATUS_RECEIVED,
+                'delivery_date' => now()->subDay()->toDateString(),
+                'return_date' => now()->setTime(16, 30),
             ],
             [
                 'partner_email' => 'partner3@courier.test',
@@ -189,7 +217,7 @@ class DatabaseSeeder extends Seeder
                 'person_name' => 'Maka Japaridze',
                 'delivery_status' => DeliveryItem::STATUS_POSTPONEMENT,
                 'delivery_date' => now()->addDays(2)->toDateString(),
-                'actual_delivery_date' => null,
+                'return_date' => null,
             ],
             [
                 'partner_email' => env('DEMO_PARTNER_EMAIL', 'partner@courier.test'),
@@ -203,7 +231,7 @@ class DatabaseSeeder extends Seeder
                 'person_name' => 'Ana Kapanadze',
                 'delivery_status' => DeliveryItem::STATUS_CANCELLATION_ON_SITE,
                 'delivery_date' => now()->toDateString(),
-                'actual_delivery_date' => now()->setTime(13, 10),
+                'return_date' => null,
             ],
             [
                 'partner_email' => 'partner2@courier.test',
@@ -217,7 +245,7 @@ class DatabaseSeeder extends Seeder
                 'person_name' => 'Irakli Gelashvili',
                 'delivery_status' => DeliveryItem::STATUS_POSTPONEMENT_AFTER_ARRIVE,
                 'delivery_date' => now()->toDateString(),
-                'actual_delivery_date' => now()->setTime(14, 45),
+                'return_date' => null,
             ],
             [
                 'partner_email' => 'partner3@courier.test',
@@ -231,7 +259,7 @@ class DatabaseSeeder extends Seeder
                 'person_name' => 'Tamar Chikovani',
                 'delivery_status' => DeliveryItem::STATUS_REDIRECT_ADDRESS,
                 'delivery_date' => now()->addDay()->toDateString(),
-                'actual_delivery_date' => null,
+                'return_date' => null,
             ],
             [
                 'partner_email' => 'partner2@courier.test',
@@ -245,7 +273,7 @@ class DatabaseSeeder extends Seeder
                 'person_name' => 'Levan Tsiklauri',
                 'delivery_status' => DeliveryItem::STATUS_FUTURE_DELIVERY,
                 'delivery_date' => now()->addDays(4)->toDateString(),
-                'actual_delivery_date' => null,
+                'return_date' => null,
             ],
             [
                 'partner_email' => 'partner3@courier.test',
@@ -259,7 +287,7 @@ class DatabaseSeeder extends Seeder
                 'person_name' => 'Sopo Chkheidze',
                 'delivery_status' => DeliveryItem::STATUS_DELIVERED,
                 'delivery_date' => now()->subDay()->toDateString(),
-                'actual_delivery_date' => now()->subDay()->setTime(18, 5),
+                'return_date' => null,
             ],
             [
                 'partner_email' => env('DEMO_PARTNER_EMAIL', 'partner@courier.test'),
@@ -273,7 +301,7 @@ class DatabaseSeeder extends Seeder
                 'person_name' => 'Dato Kereselidze',
                 'delivery_status' => DeliveryItem::STATUS_FUTURE_DELIVERY,
                 'delivery_date' => now()->addDays(3)->toDateString(),
-                'actual_delivery_date' => null,
+                'return_date' => null,
             ],
         ] as $deliveryItemData) {
             $partner = $partners->get($deliveryItemData['partner_email']);
@@ -301,13 +329,9 @@ class DatabaseSeeder extends Seeder
                     'person_name' => $deliveryItemData['person_name'],
                     'delivery_status' => $deliveryItemData['delivery_status'],
                     'delivery_date' => $deliveryItemData['delivery_date'],
-                    'actual_delivery_date' => $deliveryItemData['actual_delivery_date'],
+                    'return_date' => $deliveryItemData['return_date'],
                 ],
             );
-        }
-
-        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
-            $this->call(DeliveryZoneSeeder::class);
         }
     }
 }

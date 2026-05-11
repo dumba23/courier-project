@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Courier extends Model
 {
@@ -28,9 +28,9 @@ class Courier extends Model
         return $this->hasMany(DeliveryItem::class, 'assigned_courier_id');
     }
 
-    public function deliveryZones(): BelongsToMany
+    public function districts(): BelongsToMany
     {
-        return $this->belongsToMany(DeliveryZone::class, 'courier_delivery_zones')
+        return $this->belongsToMany(District::class, 'courier_districts')
             ->withTimestamps();
     }
 }

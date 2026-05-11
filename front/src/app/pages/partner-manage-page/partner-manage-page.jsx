@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   CheckIcon,
   CloseIcon,
+  EditIcon,
   PlusIcon,
 } from '../../core/ui/icons.jsx'
 import { DataTable } from '../../core/ui/data-table.jsx'
@@ -14,13 +15,40 @@ const initialForm = {
   phone_number: '',
   pickup_address: '',
   tariff: '',
+  tariff_per_kg: false,
+  tariff_per_kg_ranges: [
+    { up_to_kg: '', price: '' },
+  ],
   password: '',
   password_confirmation: '',
+}
+
+function createEmptyTariffRange() {
+  return { up_to_kg: '', price: '' }
+}
+
+function formatTariffCell(partner) {
+  if (!partner.tariff_per_kg) {
+    return partner.tariff
+  }
+
+  const ranges = Array.isArray(partner.tariff_per_kg_ranges)
+    ? partner.tariff_per_kg_ranges
+    : []
+
+  if (!ranges.length) {
+    return 'Per kg'
+  }
+
+  return ranges
+    .map((range) => `${range.up_to_kg} კგ - ${range.price} ₾`)
+    .join(', ')
 }
 
 export function PartnerManagePage({ auth }) {
   const [partners, setPartners] = useState([])
   const [form, setForm] = useState(initialForm)
+  const [editingPartnerId, setEditingPartnerId] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [status, setStatus] = useState({ type: '', message: '' })
@@ -48,17 +76,77 @@ export function PartnerManagePage({ auth }) {
   }, [auth?.token])
 
   function handleChange(event) {
-    const { name, value } = event.target
+    const { name, value, type, checked } = event.target
 
     setForm((current) => ({
       ...current,
-      [name]: value,
+      ...(name === 'tariff_per_kg'
+        ? {
+            tariff_per_kg: checked,
+            tariff: checked ? '' : current.tariff,
+            tariff_per_kg_ranges: checked
+              ? (current.tariff_per_kg_ranges.length ? current.tariff_per_kg_ranges : [createEmptyTariffRange()])
+              : current.tariff_per_kg_ranges,
+          }
+        : {
+            [name]: type === 'checkbox' ? checked : value,
+          }),
+    }))
+  }
+
+  function handleRangeChange(index, field, value) {
+    setForm((current) => ({
+      ...current,
+      tariff_per_kg_ranges: current.tariff_per_kg_ranges.map((range, rangeIndex) => (
+        rangeIndex === index
+          ? { ...range, [field]: value }
+          : range
+      )),
+    }))
+  }
+
+  function handleAddRange() {
+    setForm((current) => ({
+      ...current,
+      tariff_per_kg_ranges: [...current.tariff_per_kg_ranges, createEmptyTariffRange()],
+    }))
+  }
+
+  function handleRemoveRange(index) {
+    setForm((current) => ({
+      ...current,
+      tariff_per_kg_ranges: current.tariff_per_kg_ranges.length === 1
+        ? current.tariff_per_kg_ranges
+        : current.tariff_per_kg_ranges.filter((_, rangeIndex) => rangeIndex !== index),
     }))
   }
 
   function openCreateDialog() {
     setStatus({ type: '', message: '' })
+    setEditingPartnerId(null)
     setForm(initialForm)
+    setIsDialogOpen(true)
+  }
+
+  function openEditDialog(partner) {
+    setStatus({ type: '', message: '' })
+    setEditingPartnerId(partner.id)
+    setForm({
+      name: partner.name ?? '',
+      email: partner.user?.email ?? '',
+      phone_number: partner.phone_number ?? '',
+      pickup_address: partner.pickup_address ?? '',
+      tariff: partner.tariff ?? '',
+      tariff_per_kg: Boolean(partner.tariff_per_kg),
+      tariff_per_kg_ranges: Array.isArray(partner.tariff_per_kg_ranges) && partner.tariff_per_kg_ranges.length
+        ? partner.tariff_per_kg_ranges.map((range) => ({
+            up_to_kg: range.up_to_kg ?? '',
+            price: range.price ?? '',
+          }))
+        : [createEmptyTariffRange()],
+      password: '',
+      password_confirmation: '',
+    })
     setIsDialogOpen(true)
   }
 
@@ -68,6 +156,7 @@ export function PartnerManagePage({ auth }) {
     }
 
     setIsDialogOpen(false)
+    setEditingPartnerId(null)
     setForm(initialForm)
   }
 
@@ -75,20 +164,37 @@ export function PartnerManagePage({ auth }) {
     event.preventDefault()
     setIsSubmitting(true)
     setStatus({ type: '', message: '' })
+    const isEditing = Boolean(editingPartnerId)
 
     try {
-      const payload = await apiRequest('/api/partners', {
-        method: 'POST',
+      const payload = await apiRequest(isEditing ? `/api/partners/${editingPartnerId}` : '/api/partners', {
+        method: isEditing ? 'PUT' : 'POST',
         token: auth?.token,
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          tariff: form.tariff_per_kg ? null : form.tariff,
+          tariff_per_kg_ranges: form.tariff_per_kg
+            ? form.tariff_per_kg_ranges
+            : [],
+          password: form.password || null,
+          password_confirmation: form.password_confirmation || null,
+        }),
       })
 
-      setPartners((current) => [payload.partner, ...current])
+      if (isEditing) {
+        setPartners((current) => current.map((partner) => (
+          partner.id === payload.partner.id ? payload.partner : partner
+        )))
+      } else {
+        setPartners((current) => [payload.partner, ...current])
+      }
+
       setForm(initialForm)
+      setEditingPartnerId(null)
       setIsDialogOpen(false)
       setStatus({
         type: 'success',
-        message: 'Partner created.',
+        message: isEditing ? 'Partner updated.' : 'Partner created.',
       })
     } catch (requestError) {
       setStatus({
@@ -99,6 +205,8 @@ export function PartnerManagePage({ auth }) {
       setIsSubmitting(false)
     }
   }
+
+  const isEditing = Boolean(editingPartnerId)
 
   return (
     <section className="partner-manage-page">
@@ -126,7 +234,7 @@ export function PartnerManagePage({ auth }) {
       ) : (
         <DataTable
           tableClassName="partner-table"
-          headers={['Name', 'Email', 'Phone', 'Pickup address', 'Tariff']}
+          headers={['Name', 'Email', 'Phone', 'Pickup address', 'Tariff', '']}
           emptyMessage="No partners."
           rows={partners.map((partner) => (
             <tr key={partner.id}>
@@ -134,7 +242,18 @@ export function PartnerManagePage({ auth }) {
               <td>{partner.user?.email}</td>
               <td>{partner.phone_number}</td>
               <td>{partner.pickup_address}</td>
-              <td>{partner.tariff}</td>
+              <td>{formatTariffCell(partner)}</td>
+              <td className="partner-table__actions">
+                <button
+                  type="button"
+                  className="button-secondary partner-table__edit icon-button"
+                  onClick={() => openEditDialog(partner)}
+                  aria-label={`Edit ${partner.name}`}
+                  title={`Edit ${partner.name}`}
+                >
+                  <EditIcon className="action-icon" />
+                </button>
+              </td>
             </tr>
           ))}
         />
@@ -147,7 +266,8 @@ export function PartnerManagePage({ auth }) {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="partner-manage-page__dialog-head">
-              <h3>Add partner</h3>
+              <h3>{isEditing ? 'Edit partner' : 'Add partner'}</h3>
+              {isEditing ? <p>Leave password empty to keep the current password.</p> : null}
             </div>
 
             <form className="partner-manage-page__form" onSubmit={handleSubmit}>
@@ -178,18 +298,80 @@ export function PartnerManagePage({ auth }) {
                   />
                 </label>
 
-                <label className="form-field">
-                  Tariff
+                <label className="form-field partner-manage-page__checkbox">
+                  <span>Tariff per kg</span>
                   <input
-                    name="tariff"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.tariff}
+                    name="tariff_per_kg"
+                    type="checkbox"
+                    checked={Boolean(form.tariff_per_kg)}
                     onChange={handleChange}
-                    required
                   />
                 </label>
+
+                {form.tariff_per_kg ? (
+                  <div className="form-field partner-manage-page__full">
+                    <div className="partner-manage-page__tariff-ranges-head">
+                      <span>Tariff ranges</span>
+                      <button
+                        type="button"
+                        className="button-secondary icon-button"
+                        onClick={handleAddRange}
+                        aria-label="Add tariff range"
+                        title="Add tariff range"
+                      >
+                        <PlusIcon className="action-icon" />
+                      </button>
+                    </div>
+
+                    <div className="partner-manage-page__tariff-ranges">
+                      {form.tariff_per_kg_ranges.map((range, index) => (
+                        <div key={index} className="partner-manage-page__tariff-range-row">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={range.up_to_kg}
+                            onChange={(event) => handleRangeChange(index, 'up_to_kg', event.target.value)}
+                            placeholder="Up to kg"
+                            required={form.tariff_per_kg}
+                          />
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={range.price}
+                            onChange={(event) => handleRangeChange(index, 'price', event.target.value)}
+                            placeholder="Price"
+                            required={form.tariff_per_kg}
+                          />
+                          <button
+                            type="button"
+                            className="button-secondary icon-button"
+                            onClick={() => handleRemoveRange(index)}
+                            aria-label={`Remove tariff range ${index + 1}`}
+                            title="Remove tariff range"
+                            disabled={form.tariff_per_kg_ranges.length === 1}
+                          >
+                            <CloseIcon className="action-icon" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <label className="form-field">
+                    Tariff
+                    <input
+                      name="tariff"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={form.tariff}
+                      onChange={handleChange}
+                      required={!form.tariff_per_kg}
+                    />
+                  </label>
+                )}
 
                 <label className="form-field partner-manage-page__full">
                   Pickup address
@@ -208,7 +390,7 @@ export function PartnerManagePage({ auth }) {
                     type="password"
                     value={form.password}
                     onChange={handleChange}
-                    required
+                    required={!isEditing}
                   />
                 </label>
 
@@ -219,7 +401,7 @@ export function PartnerManagePage({ auth }) {
                     type="password"
                     value={form.password_confirmation}
                     onChange={handleChange}
-                    required
+                    required={!isEditing}
                   />
                 </label>
               </div>

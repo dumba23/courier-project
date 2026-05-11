@@ -1,21 +1,51 @@
-import { ColumnsIcon, DownloadIcon, InfoIcon, PlusIcon, UploadIcon } from '../../../core/ui/icons.jsx'
+import { ColumnsIcon, DownloadIcon, InfoIcon, MapPinIcon, PlusIcon, UploadIcon } from '../../../core/ui/icons.jsx'
 
 export function DeliveryItemsHeader({
   canCreateItems,
   importInputRef,
+  isAdmin,
+  isAssigningDistricts,
+  isMultipleDistrictsFilterActive,
   isRefreshing,
+  title = 'Deliveries',
+  onAssignDistricts,
   onDownloadTemplate,
   onOpenColumns,
   onOpenCreate,
   onOpenImportPicker,
   onOpenLegend,
   onImportFileChange,
+  onToggleMultipleDistrictsFilter,
 }) {
   return (
     <header className="delivery-items-page__header">
-      <h2 className="page-title">Deliveries</h2>
+      <div className="delivery-items-page__header-main">
+        <h2 className="page-title">{title}</h2>
+        <button
+          type="button"
+          className={`button-secondary delivery-items-page__header-filter${
+            isMultipleDistrictsFilterActive ? ' is-active' : ''
+          }`}
+          onClick={onToggleMultipleDistrictsFilter}
+        >
+          Multiple districts
+        </button>
+      </div>
       <div className="delivery-items-page__header-actions">
         {isRefreshing ? <span className="delivery-items-page__refreshing">Updating...</span> : null}
+        {isAdmin ? (
+          <button
+            type="button"
+            className="button-secondary icon-button delivery-items-page__toolbar-button"
+            aria-label="Assign districts to filtered deliveries"
+            title="Assign districts to filtered deliveries"
+            data-tooltip="Assign districts to filtered deliveries"
+            disabled={isAssigningDistricts}
+            onClick={onAssignDistricts}
+          >
+            <MapPinIcon className="action-icon" />
+          </button>
+        ) : null}
         {canCreateItems ? (
           <>
             <input

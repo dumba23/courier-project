@@ -1,0 +1,89 @@
+.courier-comment-templates-page {
+  display: grid;
+  gap: 14px;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__subtitle {
+    margin: 4px 0 0;
+    color: var(--color-copy);
+  }
+
+  &__dialog-head {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 16px;
+
+    h3 {
+      margin: 0;
+      color: var(--color-ink);
+      font-size: 1.1rem;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+
+  &__form {
+    display: grid;
+    gap: 16px;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+}
+
+.courier-comment-templates-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: top;
+  }
+
+  th {
+    color: var(--color-copy);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--color-panel-strong);
+  }
+
+  td {
+    color: var(--color-ink);
+  }
+
+  &__content {
+    white-space: pre-wrap;
+  }
+
+  &__actions {
+    width: 1%;
+    text-align: right;
+    white-space: nowrap;
+
+    button + button {
+      margin-left: 8px;
+    }
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+}

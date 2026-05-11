@@ -170,3 +170,17 @@ export function UploadIcon(props) {
     </svg>
   )
 }
+
+export function MapPinIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <path
+        d="M12 20s6-5.2 6-10.2A6 6 0 1 0 6 9.8C6 14.8 12 20 12 20Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="9.5" r="2.25" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  )
+}

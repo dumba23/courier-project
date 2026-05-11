@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 export function FilterMenuPortal({
   filterKey,
   getOptionLabel,
+  headerActions = null,
   menuRef,
   openFilterMenu,
   options,
@@ -20,6 +21,11 @@ export function FilterMenuPortal({
       className="delivery-items-table__multi-filter-menu delivery-items-table__multi-filter-menu--floating"
       style={style}
     >
+      {headerActions ? (
+        <div className="delivery-items-table__multi-filter-actions">
+          {headerActions}
+        </div>
+      ) : null}
       {options.map((option) => (
         <label key={option.id ?? option[0]} className="delivery-items-table__multi-filter-option">
           <input

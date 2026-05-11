@@ -1,0 +1,166 @@
+.courier-payroll-page {
+  display: grid;
+  gap: 18px;
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__subtitle {
+    margin: 6px 0 0;
+    color: var(--color-copy);
+  }
+
+  &__filters {
+    display: grid;
+    gap: 14px;
+    padding: 14px 0 18px;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(2, minmax(0, 240px));
+      align-items: end;
+    }
+
+    .form-field {
+      gap: 7px;
+    }
+
+    input,
+    select {
+      min-height: 42px;
+      border: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
+      background: color-mix(in srgb, var(--color-surface) 92%, #f3f0ea 8%);
+      box-shadow: none;
+    }
+  }
+
+  &__summary {
+    display: grid;
+    gap: 0;
+    border-top: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+  }
+
+  &__summary-card {
+    display: grid;
+    gap: 4px;
+    padding: 14px 4px;
+    background: transparent;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
+    }
+
+    @media (min-width: 768px) {
+      padding: 16px 10px;
+
+      &:not(:last-child) {
+        border-bottom: 0;
+        border-right: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
+      }
+    }
+
+    span {
+      color: var(--color-copy);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    strong {
+      color: var(--color-ink);
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+  }
+
+  &__summary-card--accent strong {
+    color: color-mix(in srgb, var(--color-ink) 78%, #86642f 22%);
+  }
+
+  &__summary-card--danger strong {
+    color: color-mix(in srgb, #8f2e2e 84%, var(--color-ink) 16%);
+  }
+
+  &__summary-card--transfer strong {
+    color: color-mix(in srgb, #2f5f6f 80%, var(--color-ink) 20%);
+  }
+
+  &__table-shell {
+    border-radius: 18px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--color-surface) 94%, #f7f3ec 6%);
+    box-shadow: 0 1px 0 rgba(22, 25, 33, 0.05);
+  }
+
+  &__money-input {
+    width: 100%;
+    min-width: 104px;
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--color-panel-strong) 68%, white 32%);
+    transition: border-color 0.18s ease, background 0.18s ease;
+
+    &:focus {
+      outline: none;
+      border-color: color-mix(in srgb, var(--color-ink) 20%, transparent);
+      background: var(--color-surface);
+    }
+  }
+
+  &__money-input--danger {
+    background: color-mix(in srgb, #f4dede 48%, white 52%);
+
+    &:focus {
+      border-color: color-mix(in srgb, #8f2e2e 28%, transparent);
+    }
+  }
+}
+
+.courier-payroll-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 52%, transparent);
+    vertical-align: top;
+  }
+
+  th {
+    color: var(--color-copy);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: color-mix(in srgb, var(--color-panel-strong) 55%, white 45%);
+  }
+
+  td {
+    color: var(--color-ink);
+    background: transparent;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tbody tr:hover td {
+    background: color-mix(in srgb, var(--color-surface) 74%, #f5f0e7 26%);
+  }
+}

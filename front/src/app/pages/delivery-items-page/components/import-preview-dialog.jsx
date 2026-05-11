@@ -5,6 +5,7 @@ export function ImportPreviewDialog({
   importErrors,
   importFileName,
   importedItems,
+  isTariffPerKgItem,
   isAdmin,
   isSubmitting,
   onClose,
@@ -52,6 +53,7 @@ export function ImportPreviewDialog({
             'Product',
             'Customer',
             'Phone',
+            'City',
             'Address',
             'Price',
             'Comment',
@@ -77,6 +79,10 @@ export function ImportPreviewDialog({
               ) : null}
               <td>
                 <input
+                  type={isTariffPerKgItem(item) ? 'number' : 'text'}
+                  min={isTariffPerKgItem(item) ? '0' : undefined}
+                  step={isTariffPerKgItem(item) ? '0.01' : undefined}
+                  inputMode={isTariffPerKgItem(item) ? 'decimal' : undefined}
                   value={item.product ?? ''}
                   onChange={(event) => onUpdateItem(index, 'product', event.target.value)}
                 />
@@ -91,6 +97,12 @@ export function ImportPreviewDialog({
                 <input
                   value={item.phone ?? ''}
                   onChange={(event) => onUpdateItem(index, 'phone', event.target.value)}
+                />
+              </td>
+              <td>
+                <input
+                  value={item.city ?? ''}
+                  onChange={(event) => onUpdateItem(index, 'city', event.target.value)}
                 />
               </td>
               <td>

@@ -7,6 +7,7 @@ import { TablePagination } from '../../core/ui/table-pagination.jsx'
 import {
   BULK_ACTION_COURIER,
   BULK_ACTION_STATUS,
+  DEFAULT_STATUS_OPTIONS,
   initialFilters,
   initialPagination,
   initialSort,
@@ -15,6 +16,7 @@ import {
   STATUS_DESCRIPTIONS,
   STATUS_LABELS,
   STATUS_OPTIONS,
+  WAREHOUSE_STATE_OPTIONS,
 } from './delivery-items.constants.js'
 import { buildDeliveryItemColumns } from './delivery-items.columns.jsx'
 import {
@@ -28,29 +30,51 @@ import {
 import { BulkUpdateDialog } from './components/bulk-update-dialog.jsx'
 import { ColumnsDialog } from './components/columns-dialog.jsx'
 import { CreateDeliveriesDialog } from './components/create-deliveries-dialog.jsx'
+import { DeliveredStatusDialog } from './components/delivered-status-dialog.jsx'
 import { DeliveryItemsHeader } from './components/delivery-items-header.jsx'
 import { FilterMenuPortal } from './components/filter-menu-portal.jsx'
 import { ImportPreviewDialog } from './components/import-preview-dialog.jsx'
+import { useIsMobile } from './components/mobile-option-select.jsx'
 import { StatusLegendDialog } from './components/status-legend-dialog.jsx'
 import './delivery-items-page.scss'
 
-export function DeliveryItemsPage({ auth }) {
-  const storedTableState = useMemo(() => readStoredTableState(), [])
+function applyViewScopeToItems(items, viewScope) {
+  if (viewScope === 'canceled') {
+    return items.filter((item) => item.delivery_status === 'canceled')
+  }
+
+  if (viewScope === 'active') {
+    return items.filter((item) => item.delivery_status !== 'canceled')
+  }
+
+  return items
+}
+
+export function DeliveryItemsPage({ auth, viewScope = 'active' }) {
+  const storedTableState = useMemo(() => readStoredTableState(viewScope), [viewScope])
   const [deliveryItems, setDeliveryItems] = useState([])
   const [partners, setPartners] = useState([])
   const [couriers, setCouriers] = useState([])
+  const [courierCommentTemplates, setCourierCommentTemplates] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [statusUpdateId, setStatusUpdateId] = useState(null)
   const [courierUpdateId, setCourierUpdateId] = useState(null)
+  const [courierCommentUpdateId, setCourierCommentUpdateId] = useState(null)
+  const [productUpdateId, setProductUpdateId] = useState(null)
+  const [additionalStatusUpdateId, setAdditionalStatusUpdateId] = useState(null)
+  const [warehouseStateUpdateId, setWarehouseStateUpdateId] = useState(null)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const [isLegendOpen, setIsLegendOpen] = useState(false)
   const [isColumnsDialogOpen, setIsColumnsDialogOpen] = useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isCreateSubmitting, setIsCreateSubmitting] = useState(false)
+  const [isAssigningDistricts, setIsAssigningDistricts] = useState(false)
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const [isImportSubmitting, setIsImportSubmitting] = useState(false)
+  const [deliveredDialogState, setDeliveredDialogState] = useState(null)
   const [importedItems, setImportedItems] = useState([])
   const [importErrors, setImportErrors] = useState([])
   const [importFileName, setImportFileName] = useState('')
@@ -70,7 +94,9 @@ export function DeliveryItemsPage({ auth }) {
   const filterMenuRef = useRef(null)
   const filterTriggerRefs = useRef({})
   const importInputRef = useRef(null)
+  const isMobile = useIsMobile()
   const isAdmin = auth?.user?.role === 'admin'
+  const isCourier = auth?.user?.role === 'courier'
   const isPartner = auth?.user?.role === 'seller'
   const canCreateItems = isAdmin || auth?.user?.role === 'seller'
   const partnerEmailMap = useMemo(() => (
@@ -79,13 +105,28 @@ export function DeliveryItemsPage({ auth }) {
   const partnerIdMap = useMemo(() => (
     Object.fromEntries(partners.map((partner) => [String(partner.id), partner]))
   ), [partners])
+  const sellerTariffPerKg = Boolean(auth?.user?.partner?.tariff_per_kg)
   const hiddenColumnKeys = useMemo(() => (
-    isPartner ? ['partner', 'courier', 'district'] : []
-  ), [isPartner])
+    isPartner
+      ? ['partner', 'courier', 'district']
+      : isCourier
+        ? ['courier']
+        : []
+  ), [isCourier, isPartner])
+  const pageTitle = viewScope === 'canceled' ? 'Canceled Deliveries' : 'Deliveries'
+  const visibleStatusOptions = useMemo(() => DEFAULT_STATUS_OPTIONS, [])
+  const visibleStatusLabels = useMemo(() => (
+    Object.fromEntries(visibleStatusOptions)
+  ), [visibleStatusOptions])
+  const visibleStatusDescriptions = useMemo(() => (
+    Object.fromEntries(
+      visibleStatusOptions.map(([status]) => [status, STATUS_DESCRIPTIONS[status]]),
+    )
+  ), [visibleStatusOptions])
 
   useEffect(() => {
-    writeStoredTableState({ filters, sort, pagination, visibleColumns })
-  }, [filters, sort, pagination, visibleColumns])
+    writeStoredTableState({ filters, sort, pagination, visibleColumns }, viewScope)
+  }, [filters, sort, pagination, viewScope, visibleColumns])
 
   useEffect(() => {
     let isCancelled = false
@@ -104,13 +145,13 @@ export function DeliveryItemsPage({ auth }) {
       setError('')
 
       try {
-        const queryString = `${buildQueryString(filters, sort)}&page=${pagination.page}&per_page=${pagination.per_page}`
+        const queryString = `${buildQueryString(filters, sort)}&page=${pagination.page}&per_page=${pagination.per_page}&view_scope=${viewScope}`
         const payload = await apiRequest(`/api/delivery-items?${queryString}`, {
           token: auth?.token,
         })
 
         if (!isCancelled) {
-          setDeliveryItems(payload.delivery_items ?? [])
+          setDeliveryItems(applyViewScopeToItems(payload.delivery_items ?? [], viewScope))
           setMeta(payload.meta ?? initialPagination)
         }
       } catch (requestError) {
@@ -130,7 +171,7 @@ export function DeliveryItemsPage({ auth }) {
       isCancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [auth?.token, filters, sort, pagination.page, pagination.per_page, reloadKey, hasLoadedOnce])
+  }, [auth?.token, filters, sort, pagination.page, pagination.per_page, reloadKey, hasLoadedOnce, viewScope])
 
   useEffect(() => {
     if (!isAdmin) {
@@ -163,6 +204,36 @@ export function DeliveryItemsPage({ auth }) {
       isCancelled = true
     }
   }, [auth?.token, isAdmin])
+
+  useEffect(() => {
+    if (!auth?.token) {
+      return undefined
+    }
+
+    let isCancelled = false
+
+    async function loadCourierCommentTemplates() {
+      try {
+        const payload = await apiRequest('/api/courier-comment-templates', {
+          token: auth?.token,
+        })
+
+        if (!isCancelled) {
+          setCourierCommentTemplates(payload.templates ?? [])
+        }
+      } catch (requestError) {
+        if (!isCancelled) {
+          setError(requestError.message)
+        }
+      }
+    }
+
+    loadCourierCommentTemplates()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [auth?.token])
 
   useEffect(() => {
     function handleOutsideClick(event) {
@@ -247,6 +318,17 @@ export function DeliveryItemsPage({ auth }) {
     }))
   }
 
+  function toggleMultipleDistrictsFilter() {
+    setFilters((current) => ({
+      ...current,
+      multiple_districts: !current.multiple_districts,
+    }))
+    setPagination((current) => ({
+      ...current,
+      page: 1,
+    }))
+  }
+
   function handleMultiSelectChange(filterKey, value) {
     setFilters((current) => {
       const exists = current[filterKey].includes(value)
@@ -258,6 +340,17 @@ export function DeliveryItemsPage({ auth }) {
           : [...current[filterKey], value],
       }
     })
+    setPagination((current) => ({
+      ...current,
+      page: 1,
+    }))
+  }
+
+  function handleMultiSelectSet(filterKey, values) {
+    setFilters((current) => ({
+      ...current,
+      [filterKey]: values,
+    }))
     setPagination((current) => ({
       ...current,
       page: 1,
@@ -286,8 +379,40 @@ export function DeliveryItemsPage({ auth }) {
   }
 
   async function handleStatusUpdate(deliveryItemId, nextStatus) {
+    const currentItem = deliveryItems.find((item) => item.id === deliveryItemId)
+
+    if (
+      isCourier
+      && nextStatus === 'delivered'
+      && currentItem
+      && currentItem.delivery_status !== 'delivered'
+    ) {
+      setDeliveredDialogState({
+        deliveryItemId,
+        transferredAmount: String(currentItem.transferred_to_shop_amount ?? '0'),
+        collectedAmount: String(currentItem.collected_amount ?? currentItem.price ?? '0'),
+      })
+
+      return
+    }
+
+    if (
+      viewScope === 'canceled'
+      && currentItem?.delivery_status === 'canceled'
+      && nextStatus !== currentItem.delivery_status
+    ) {
+      const isConfirmed = window.confirm(
+        'Changing the status will remove this item from the canceled page. Continue?',
+      )
+
+      if (!isConfirmed) {
+        return
+      }
+    }
+
     setStatusUpdateId(deliveryItemId)
     setError('')
+    setNotice('')
 
     try {
       const payload = await apiRequest(`/api/delivery-items/${deliveryItemId}/status`, {
@@ -298,9 +423,56 @@ export function DeliveryItemsPage({ auth }) {
         }),
       })
 
-      setDeliveryItems((current) => current.map((item) => (
-        item.id === deliveryItemId ? payload.delivery_item : item
-      )))
+      setDeliveryItems((current) => applyViewScopeToItems(
+        current.map((item) => (
+          item.id === deliveryItemId ? payload.delivery_item : item
+        )),
+        viewScope,
+      ))
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setStatusUpdateId(null)
+    }
+  }
+
+  function closeDeliveredDialog(force = false) {
+    if (statusUpdateId && !force) {
+      return
+    }
+
+    setDeliveredDialogState(null)
+  }
+
+  async function handleDeliveredDialogSubmit(event) {
+    event.preventDefault()
+
+    if (!deliveredDialogState) {
+      return
+    }
+
+    setStatusUpdateId(deliveredDialogState.deliveryItemId)
+    setError('')
+    setNotice('')
+
+    try {
+      const payload = await apiRequest(`/api/delivery-items/${deliveredDialogState.deliveryItemId}/status`, {
+        method: 'PATCH',
+        token: auth?.token,
+        body: JSON.stringify({
+          delivery_status: 'delivered',
+          transferred_to_shop_amount: Number(deliveredDialogState.transferredAmount || 0),
+          collected_amount: Number(deliveredDialogState.collectedAmount || 0),
+        }),
+      })
+
+      setDeliveryItems((current) => applyViewScopeToItems(
+        current.map((item) => (
+          item.id === deliveredDialogState.deliveryItemId ? payload.delivery_item : item
+        )),
+        viewScope,
+      ))
+      closeDeliveredDialog(true)
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -311,6 +483,7 @@ export function DeliveryItemsPage({ auth }) {
   async function handleCourierUpdate(deliveryItemId, nextCourierId) {
     setCourierUpdateId(deliveryItemId)
     setError('')
+    setNotice('')
 
     try {
       const payload = await apiRequest(`/api/delivery-items/${deliveryItemId}/courier`, {
@@ -321,13 +494,124 @@ export function DeliveryItemsPage({ auth }) {
         }),
       })
 
-      setDeliveryItems((current) => current.map((item) => (
-        item.id === deliveryItemId ? payload.delivery_item : item
-      )))
+      setDeliveryItems((current) => applyViewScopeToItems(
+        current.map((item) => (
+          item.id === deliveryItemId ? payload.delivery_item : item
+        )),
+        viewScope,
+      ))
     } catch (requestError) {
       setError(requestError.message)
     } finally {
       setCourierUpdateId(null)
+    }
+  }
+
+  async function handleCourierCommentUpdate(deliveryItemId, nextComment) {
+    setCourierCommentUpdateId(deliveryItemId)
+    setError('')
+    setNotice('')
+
+    try {
+      const payload = await apiRequest(`/api/delivery-items/${deliveryItemId}/courier-comment`, {
+        method: 'PATCH',
+        token: auth?.token,
+        body: JSON.stringify({
+          courier_comment: nextComment.trim() ? nextComment : null,
+        }),
+      })
+
+      setDeliveryItems((current) => applyViewScopeToItems(
+        current.map((item) => (
+          item.id === deliveryItemId ? payload.delivery_item : item
+        )),
+        viewScope,
+      ))
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setCourierCommentUpdateId(null)
+    }
+  }
+
+  async function handleProductUpdate(deliveryItemId, nextProduct) {
+    setProductUpdateId(deliveryItemId)
+    setError('')
+    setNotice('')
+
+    try {
+      const payload = await apiRequest(`/api/delivery-items/${deliveryItemId}/product`, {
+        method: 'PATCH',
+        token: auth?.token,
+        body: JSON.stringify({
+          product: nextProduct,
+        }),
+      })
+
+      setDeliveryItems((current) => applyViewScopeToItems(
+        current.map((item) => (
+          item.id === deliveryItemId ? payload.delivery_item : item
+        )),
+        viewScope,
+      ))
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setProductUpdateId(null)
+    }
+  }
+
+  async function handleAdditionalStatusUpdate(deliveryItemId, nextStatus) {
+    setAdditionalStatusUpdateId(deliveryItemId)
+    setError('')
+    setNotice('')
+
+    try {
+      const payload = await apiRequest(`/api/delivery-items/${deliveryItemId}/additional-status`, {
+        method: 'PATCH',
+        token: auth?.token,
+        body: JSON.stringify({
+          additional_status: nextStatus || null,
+        }),
+      })
+
+      setDeliveryItems((current) => applyViewScopeToItems(
+        current.map((item) => (
+          item.id === deliveryItemId ? payload.delivery_item : item
+        )),
+        viewScope,
+      ))
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setAdditionalStatusUpdateId(null)
+    }
+  }
+
+  async function handleWarehouseStateUpdate(deliveryItemId, nextState) {
+    setWarehouseStateUpdateId(deliveryItemId)
+    setError('')
+    setNotice('')
+
+    try {
+      const payload = await apiRequest(`/api/delivery-items/${deliveryItemId}/warehouse-state`, {
+        method: 'PATCH',
+        token: auth?.token,
+        body: JSON.stringify({
+          warehouse_state: nextState || null,
+        }),
+      })
+
+      setDeliveryItems((current) => applyViewScopeToItems(
+        current.map((item) => (
+          item.id === deliveryItemId ? payload.delivery_item : item
+        )),
+        viewScope,
+      ))
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setWarehouseStateUpdateId(null)
     }
   }
 
@@ -355,7 +639,7 @@ export function DeliveryItemsPage({ auth }) {
 
   function openBulkDialog(type) {
     setBulkDialogType(type)
-    setBulkValue(type === BULK_ACTION_STATUS ? STATUS_OPTIONS[0][0] : '')
+    setBulkValue(type === BULK_ACTION_STATUS ? visibleStatusOptions[0][0] : '')
   }
 
   function closeBulkDialog(force = false) {
@@ -371,12 +655,14 @@ export function DeliveryItemsPage({ auth }) {
     event.preventDefault()
     setIsBulkSubmitting(true)
     setError('')
+    setNotice('')
 
     try {
       await apiRequest('/api/delivery-items/bulk', {
         method: 'PATCH',
         token: auth?.token,
         body: JSON.stringify({
+          view_scope: viewScope,
           ...filters,
           bulk_action: bulkDialogType,
           ...(bulkDialogType === BULK_ACTION_STATUS
@@ -459,17 +745,29 @@ export function DeliveryItemsPage({ auth }) {
     )))
   }
 
+  function isTariffPerKgItem(item) {
+    if (isAdmin) {
+      return Boolean(partnerIdMap[String(item.partner_id ?? '')]?.tariff_per_kg)
+    }
+
+    return sellerTariffPerKg
+  }
+
   async function handleCreateSubmit(event) {
     event.preventDefault()
     setIsCreateSubmitting(true)
     setError('')
+    setNotice('')
 
     try {
       await apiRequest('/api/delivery-items', {
         method: 'POST',
         token: auth?.token,
         body: JSON.stringify({
-          items: draftItems,
+          items: draftItems.map((item) => ({
+            ...item,
+            city: item.city || null,
+          })),
         }),
       })
 
@@ -482,6 +780,32 @@ export function DeliveryItemsPage({ auth }) {
     }
   }
 
+  async function handleAssignDistricts() {
+    setIsAssigningDistricts(true)
+    setError('')
+    setNotice('')
+
+    try {
+      const payload = await apiRequest('/api/delivery-items/assign-districts', {
+        method: 'PATCH',
+        token: auth?.token,
+        body: JSON.stringify({
+          ...filters,
+          view_scope: viewScope,
+        }),
+      })
+
+      setNotice(
+        `Processed ${payload.processed_count ?? 0} deliveries. Updated ${payload.updated_count ?? 0}, unresolved ${payload.unresolved_count ?? 0}.`,
+      )
+      setReloadKey((current) => current + 1)
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setIsAssigningDistricts(false)
+    }
+  }
+
   function downloadImportTemplate() {
     if (isAdmin) {
       void downloadAdminImportTemplate()
@@ -489,11 +813,12 @@ export function DeliveryItemsPage({ auth }) {
       return
     }
 
-    const headers = ['product', 'person_name', 'phone', 'address', 'price', 'comment', 'delivery_date']
+    const headers = ['product', 'person_name', 'phone', 'city', 'address', 'price', 'comment', 'delivery_date']
     const exampleRow = {
       product: 'Electronics package',
       person_name: 'Nino Beridze',
       phone: '+995555100111',
+      city: 'თბილისი',
       address: 'Saburtalo, Pekini Avenue 12',
       price: 35,
       comment: 'Call on arrival.',
@@ -530,6 +855,7 @@ export function DeliveryItemsPage({ auth }) {
       'product',
       'person_name',
       'phone',
+      'city',
       'address',
       'price',
       'comment',
@@ -540,6 +866,7 @@ export function DeliveryItemsPage({ auth }) {
       'Electronics package',
       'Nino Beridze',
       '+995555100111',
+      'თბილისი',
       'Saburtalo, Pekini Avenue 12',
       35,
       'Call on arrival.',
@@ -554,6 +881,7 @@ export function DeliveryItemsPage({ auth }) {
       { key: 'product', width: 24 },
       { key: 'person_name', width: 24 },
       { key: 'phone', width: 18 },
+      { key: 'city', width: 18 },
       { key: 'address', width: 34 },
       { key: 'price', width: 12 },
       { key: 'comment', width: 24 },
@@ -616,6 +944,8 @@ export function DeliveryItemsPage({ auth }) {
 
       if (!String(item.product ?? '').trim()) {
         nextImportErrors.push(`Row ${rowNumber}: product is required.`)
+      } else if (isTariffPerKgItem(item) && Number.isNaN(Number(item.product))) {
+        nextImportErrors.push(`Row ${rowNumber}: product must be a decimal value for this partner.`)
       }
 
       if (!String(item.person_name ?? '').trim()) {
@@ -694,6 +1024,7 @@ export function DeliveryItemsPage({ auth }) {
             product: String(row.product ?? '').trim(),
             person_name: String(row.person_name ?? '').trim(),
             phone: String(row.phone ?? '').trim(),
+            city: String(row.city ?? '').trim(),
             address: String(row.address ?? '').trim(),
             price: String(row.price ?? '').trim(),
             comment: String(row.comment ?? '').trim(),
@@ -739,6 +1070,7 @@ export function DeliveryItemsPage({ auth }) {
 
     setIsImportSubmitting(true)
     setError('')
+    setNotice('')
 
     try {
       await apiRequest('/api/delivery-items', {
@@ -750,6 +1082,7 @@ export function DeliveryItemsPage({ auth }) {
             product: item.product,
             person_name: item.person_name,
             phone: item.phone,
+            city: item.city || null,
             address: item.address,
             price: Number(item.price),
             comment: item.comment || null,
@@ -773,49 +1106,76 @@ export function DeliveryItemsPage({ auth }) {
   const courierFilterLabel = filters.courier_ids.length
     ? `${filters.courier_ids.length} selected`
     : 'All'
+  const warehouseStateFilterLabel = filters.warehouse_state.length
+    ? `${filters.warehouse_state.length} selected`
+    : 'All'
   const statusFilterLabel = filters.status.length
     ? `${filters.status.length} selected`
     : 'All'
 
   const columnDefinitions = buildDeliveryItemColumns({
     activeFilterMenu: openFilterMenu,
+    additionalStatusUpdateId,
+    courierCommentTemplates,
     couriers,
+    courierCommentUpdateId,
     courierFilterLabel,
     courierUpdateId,
+    productUpdateId,
+    warehouseStateUpdateId,
     filters,
+    handleAdditionalStatusUpdate,
+    handleCourierCommentUpdate,
+    handleProductUpdate,
+    handleWarehouseStateUpdate,
     getFilterTriggerRef,
     handleCourierUpdate,
     handleFilterChange,
     handleStatusUpdate,
     isAdmin,
+    isMobile,
     metaTotal: meta.total,
     onOpenBulkDialog: openBulkDialog,
     onSort: handleSort,
     onToggleFilterMenu: toggleFilterMenu,
     partnerFilterLabel,
     sort,
+    statusLabels: STATUS_LABELS,
+    statusOptions: visibleStatusOptions,
     statusFilterLabel,
     statusUpdateId,
+    warehouseStateFilterLabel,
+    viewScope,
   })
   const visibleColumnDefinitions = columnDefinitions.filter((column) => !hiddenColumnKeys.includes(column.key))
   const activeColumns = visibleColumnDefinitions.filter((column) => visibleColumns[column.key])
   const visibleColumnCount = visibleColumnDefinitions.filter((column) => visibleColumns[column.key]).length
+  const filteredDeliveryItems = filters.multiple_districts
+    ? deliveryItems.filter((item) => String(item.district ?? '').includes(','))
+    : deliveryItems
 
   return (
     <section className="delivery-items-page">
       <DeliveryItemsHeader
         canCreateItems={canCreateItems}
         importInputRef={importInputRef}
+        isAdmin={isAdmin}
+        isAssigningDistricts={isAssigningDistricts}
+        isMultipleDistrictsFilterActive={Boolean(filters.multiple_districts)}
         isRefreshing={isRefreshing}
+        title={pageTitle}
+        onAssignDistricts={handleAssignDistricts}
         onDownloadTemplate={downloadImportTemplate}
         onImportFileChange={handleImportFileChange}
         onOpenColumns={() => setIsColumnsDialogOpen(true)}
         onOpenCreate={openCreateDialog}
         onOpenImportPicker={openImportPicker}
         onOpenLegend={() => setIsLegendOpen(true)}
+        onToggleMultipleDistrictsFilter={toggleMultipleDistrictsFilter}
       />
 
       {error ? <p className="status-message is-error">{error}</p> : null}
+      {!error && notice ? <p className="status-message">{notice}</p> : null}
 
       {isLoading ? (
         <p className="status-message">Loading...</p>
@@ -833,7 +1193,7 @@ export function DeliveryItemsPage({ auth }) {
             )}
             emptyMessage="No delivery items."
             emptyColSpan={activeColumns.length}
-            rows={deliveryItems.map((item) => (
+            rows={filteredDeliveryItems.map((item) => (
               <tr
                 key={item.id}
                 className={`delivery-items-table__row delivery-items-table__row--${item.delivery_status}`}
@@ -880,11 +1240,39 @@ export function DeliveryItemsPage({ auth }) {
         onToggleValue={handleMultiSelectChange}
       />
       <FilterMenuPortal
-        filterKey="status"
-        getOptionLabel={(statusOption) => statusOption[1]}
+        filterKey="warehouse_state"
+        getOptionLabel={(warehouseStateOption) => warehouseStateOption[1]}
         menuRef={filterMenuRef}
         openFilterMenu={openFilterMenu}
-        options={STATUS_OPTIONS}
+        options={WAREHOUSE_STATE_OPTIONS}
+        selectedValues={filters.warehouse_state}
+        style={filterMenuStyle}
+        onToggleValue={handleMultiSelectChange}
+      />
+      <FilterMenuPortal
+        filterKey="status"
+        getOptionLabel={(statusOption) => statusOption[1]}
+        headerActions={(
+          <>
+            <button
+              type="button"
+              className="delivery-items-table__multi-filter-action"
+              onClick={() => handleMultiSelectSet('status', visibleStatusOptions.map(([status]) => status))}
+            >
+              Select all
+            </button>
+            <button
+              type="button"
+              className="delivery-items-table__multi-filter-action"
+              onClick={() => handleMultiSelectSet('status', [])}
+            >
+              Clear
+            </button>
+          </>
+        )}
+        menuRef={filterMenuRef}
+        openFilterMenu={openFilterMenu}
+        options={visibleStatusOptions}
         selectedValues={filters.status}
         style={filterMenuStyle}
         onToggleValue={handleMultiSelectChange}
@@ -893,6 +1281,7 @@ export function DeliveryItemsPage({ auth }) {
       {isCreateDialogOpen ? (
         <CreateDeliveriesDialog
           draftItems={draftItems}
+          isTariffPerKgItem={isTariffPerKgItem}
           isAdmin={isAdmin}
           isSubmitting={isCreateSubmitting}
           onAddRow={addDraftRow}
@@ -909,6 +1298,7 @@ export function DeliveryItemsPage({ auth }) {
           importErrors={importErrors}
           importFileName={importFileName}
           importedItems={importedItems}
+          isTariffPerKgItem={isTariffPerKgItem}
           isAdmin={isAdmin}
           isSubmitting={isImportSubmitting}
           onClose={() => closeImportDialog()}
@@ -918,10 +1308,26 @@ export function DeliveryItemsPage({ auth }) {
         />
       ) : null}
 
+      {deliveredDialogState ? (
+        <DeliveredStatusDialog
+          isSubmitting={statusUpdateId === deliveredDialogState.deliveryItemId}
+          transferredAmount={deliveredDialogState.transferredAmount}
+          collectedAmount={deliveredDialogState.collectedAmount}
+          onTransferredAmountChange={(value) => setDeliveredDialogState((current) => (
+            current ? { ...current, transferredAmount: value } : current
+          ))}
+          onCollectedAmountChange={(value) => setDeliveredDialogState((current) => (
+            current ? { ...current, collectedAmount: value } : current
+          ))}
+          onClose={() => closeDeliveredDialog()}
+          onConfirm={handleDeliveredDialogSubmit}
+        />
+      ) : null}
+
       {isLegendOpen ? (
         <StatusLegendDialog
-          descriptions={STATUS_DESCRIPTIONS}
-          labels={STATUS_LABELS}
+          descriptions={visibleStatusDescriptions}
+          labels={visibleStatusLabels}
           onClose={() => setIsLegendOpen(false)}
         />
       ) : null}
@@ -945,6 +1351,7 @@ export function DeliveryItemsPage({ auth }) {
           metaTotal={meta.total}
           onClose={closeBulkDialog}
           onSubmit={handleBulkSubmit}
+          statusOptions={visibleStatusOptions}
           onValueChange={setBulkValue}
         />
       ) : null}

@@ -10,6 +10,8 @@ class DeliveryItem extends Model
     public const STATUS_NEW_ITEM = 'new_item';
     public const STATUS_DELIVERED = 'delivered';
     public const STATUS_CANCELED = 'canceled';
+    public const STATUS_RECEIVABLE = 'receivable';
+    public const STATUS_RECEIVED = 'received';
     public const STATUS_POSTPONEMENT = 'postponement';
     public const STATUS_CANCELLATION_ON_SITE = 'cancellation_on_site';
     public const STATUS_POSTPONEMENT_AFTER_ARRIVE = 'postponement_after_arrive';
@@ -21,22 +23,42 @@ class DeliveryItem extends Model
         'partner_id',
         'address',
         'district',
+        'city',
         'phone',
         'price',
+        'extra_price_per_item',
+        'deduction_price_per_item',
+        'transferred_to_shop_amount',
+        'collected_amount',
+        'partner_extra_price_per_item',
         'comment',
+        'courier_comment',
         'product',
         'person_name',
         'delivery_status',
+        'additional_status',
+        'warehouse_state',
         'delivery_date',
         'actual_delivery_date',
+        'return_date',
+        'paid_at',
+        'partner_paid_at',
     ];
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
+            'extra_price_per_item' => 'decimal:2',
+            'deduction_price_per_item' => 'decimal:2',
+            'transferred_to_shop_amount' => 'decimal:2',
+            'collected_amount' => 'decimal:2',
+            'partner_extra_price_per_item' => 'decimal:2',
             'delivery_date' => 'date',
             'actual_delivery_date' => 'datetime',
+            'return_date' => 'datetime',
+            'paid_at' => 'datetime',
+            'partner_paid_at' => 'datetime',
         ];
     }
 
@@ -59,6 +81,8 @@ class DeliveryItem extends Model
             self::STATUS_NEW_ITEM => 'New item',
             self::STATUS_DELIVERED => 'Delivered',
             self::STATUS_CANCELED => 'Canceled',
+            self::STATUS_RECEIVABLE => 'მისაღები',
+            self::STATUS_RECEIVED => 'მიღებული',
             self::STATUS_POSTPONEMENT => 'Postponement',
             self::STATUS_CANCELLATION_ON_SITE => 'Cancellation on site',
             self::STATUS_POSTPONEMENT_AFTER_ARRIVE => 'Postponement after arrive',

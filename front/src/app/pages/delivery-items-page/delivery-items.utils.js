@@ -1,5 +1,9 @@
 import { DELIVERY_ITEMS_TABLE_STATE_KEY, initialFilters, initialPagination, initialSort, initialVisibleColumns } from './delivery-items.constants.js'
 
+function getTableStateStorageKey(viewScope = 'active') {
+  return `${DELIVERY_ITEMS_TABLE_STATE_KEY}:${viewScope}`
+}
+
 export function createEmptyDraftItem(isAdmin) {
   return {
     partner_id: isAdmin ? '' : undefined,
@@ -7,6 +11,7 @@ export function createEmptyDraftItem(isAdmin) {
     person_name: '',
     phone: '',
     address: '',
+    city: '',
     price: '',
     comment: '',
     delivery_date: '',
@@ -51,9 +56,11 @@ export function isImportRowEmpty(row) {
   return Object.values(row).every((value) => String(value ?? '').trim() === '')
 }
 
-export function readStoredTableState() {
+export function readStoredTableState(viewScope = 'active') {
+  const storageKey = getTableStateStorageKey(viewScope)
+
   try {
-    const storedValue = localStorage.getItem(DELIVERY_ITEMS_TABLE_STATE_KEY)
+    const storedValue = localStorage.getItem(storageKey)
 
     if (!storedValue) {
       return null
@@ -80,14 +87,14 @@ export function readStoredTableState() {
       },
     }
   } catch {
-    localStorage.removeItem(DELIVERY_ITEMS_TABLE_STATE_KEY)
+    localStorage.removeItem(storageKey)
 
     return null
   }
 }
 
-export function writeStoredTableState(state) {
-  localStorage.setItem(DELIVERY_ITEMS_TABLE_STATE_KEY, JSON.stringify(state))
+export function writeStoredTableState(state, viewScope = 'active') {
+  localStorage.setItem(getTableStateStorageKey(viewScope), JSON.stringify(state))
 }
 
 export function formatDate(value) {
