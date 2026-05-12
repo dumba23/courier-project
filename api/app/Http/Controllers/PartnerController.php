@@ -17,6 +17,15 @@ class PartnerController extends Controller
         'tariff_per_kg_ranges.*.price' => ['required', 'numeric', 'min:0'],
     ];
 
+    private const CITY_TARIFF_OVERRIDE_RULES = [
+        'city_tariff_overrides' => ['nullable', 'array'],
+        'city_tariff_overrides.*.city_name' => ['required', 'string', 'max:255'],
+        'city_tariff_overrides.*.tariff' => ['nullable', 'numeric', 'min:0'],
+        'city_tariff_overrides.*.tariff_per_kg_ranges' => ['nullable', 'array', 'min:1'],
+        'city_tariff_overrides.*.tariff_per_kg_ranges.*.up_to_kg' => ['required', 'numeric', 'gt:0'],
+        'city_tariff_overrides.*.tariff_per_kg_ranges.*.price' => ['required', 'numeric', 'min:0'],
+    ];
+
     public function index(): JsonResponse
     {
         return response()->json([
@@ -37,6 +46,7 @@ class PartnerController extends Controller
             'tariff' => ['nullable', 'numeric', 'min:0'],
             'tariff_per_kg' => ['nullable', 'boolean'],
             ...self::TARIFF_PER_KG_RANGE_RULES,
+            ...self::CITY_TARIFF_OVERRIDE_RULES,
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
         $validated = $this->normalizeTariffPayload($validated);
@@ -57,6 +67,7 @@ class PartnerController extends Controller
                 'tariff' => $validated['tariff'],
                 'tariff_per_kg' => $validated['tariff_per_kg'] ?? false,
                 'tariff_per_kg_ranges' => $validated['tariff_per_kg_ranges'] ?? null,
+                'city_tariff_overrides' => $validated['city_tariff_overrides'] ?? null,
             ])->load(['user:id,email']);
         });
 
@@ -81,6 +92,7 @@ class PartnerController extends Controller
             'tariff' => ['nullable', 'numeric', 'min:0'],
             'tariff_per_kg' => ['nullable', 'boolean'],
             ...self::TARIFF_PER_KG_RANGE_RULES,
+            ...self::CITY_TARIFF_OVERRIDE_RULES,
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
         $validated = $this->normalizeTariffPayload($validated);
@@ -101,6 +113,7 @@ class PartnerController extends Controller
                 'tariff' => $validated['tariff'],
                 'tariff_per_kg' => $validated['tariff_per_kg'] ?? false,
                 'tariff_per_kg_ranges' => $validated['tariff_per_kg_ranges'] ?? null,
+                'city_tariff_overrides' => $validated['city_tariff_overrides'] ?? null,
             ]);
         });
 
@@ -117,11 +130,86 @@ class PartnerController extends Controller
         if (! $isTariffPerKg) {
             $validated['tariff'] = $validated['tariff'] ?? 0;
             $validated['tariff_per_kg_ranges'] = null;
+            $validated['city_tariff_overrides'] = $this->normalizeFlatCityTariffOverrides(
+                $validated['city_tariff_overrides'] ?? []
+            );
 
             return $validated;
         }
 
-        $ranges = collect($validated['tariff_per_kg_ranges'] ?? [])
+        $ranges = $this->normalizeTariffRanges(
+            $validated['tariff_per_kg_ranges'] ?? [],
+            'At least one default tariff per kg range is required.'
+        );
+        $validated['tariff'] = 0;
+        $validated['tariff_per_kg_ranges'] = $ranges;
+        $validated['city_tariff_overrides'] = $this->normalizeKgCityTariffOverrides(
+            $validated['city_tariff_overrides'] ?? []
+        );
+
+        return $validated;
+    }
+
+    private function normalizeFlatCityTariffOverrides(array $overrides): ?array
+    {
+        if ($overrides === []) {
+            return null;
+        }
+
+        $normalizedOverrides = collect($overrides)
+            ->map(function (array $override): array {
+                return [
+                    'city_name' => trim((string) ($override['city_name'] ?? '')),
+                    'tariff' => (float) ($override['tariff'] ?? 0),
+                ];
+            })
+            ->values()
+            ->all();
+
+        $this->ensureUniqueOverrideCities($normalizedOverrides);
+
+        return $normalizedOverrides === [] ? null : $normalizedOverrides;
+    }
+
+    private function normalizeKgCityTariffOverrides(array $overrides): ?array
+    {
+        if ($overrides === []) {
+            return null;
+        }
+
+        $normalizedOverrides = collect($overrides)
+            ->map(function (array $override): array {
+                return [
+                    'city_name' => trim((string) ($override['city_name'] ?? '')),
+                    'tariff_per_kg_ranges' => $this->normalizeTariffRanges(
+                        $override['tariff_per_kg_ranges'] ?? [],
+                        sprintf('At least one tariff per kg range is required for city %s.', $override['city_name'] ?? '')
+                    ),
+                ];
+            })
+            ->values()
+            ->all();
+
+        $this->ensureUniqueOverrideCities($normalizedOverrides);
+
+        return $normalizedOverrides === [] ? null : $normalizedOverrides;
+    }
+
+    private function ensureUniqueOverrideCities(array $overrides): void
+    {
+        $cityNames = collect($overrides)
+            ->map(fn (array $override): string => mb_strtolower(trim((string) ($override['city_name'] ?? ''))))
+            ->filter()
+            ->values();
+
+        if ($cityNames->count() !== $cityNames->unique()->count()) {
+            abort(422, 'Each city can only have one tariff override.');
+        }
+    }
+
+    private function normalizeTariffRanges(array $ranges, string $emptyMessage): array
+    {
+        $normalizedRanges = collect($ranges)
             ->map(fn (array $range): array => [
                 'up_to_kg' => (float) $range['up_to_kg'],
                 'price' => (float) $range['price'],
@@ -130,11 +218,11 @@ class PartnerController extends Controller
             ->values()
             ->all();
 
-        abort_if($ranges === [], 422, 'At least one tariff per kg range is required.');
+        abort_if($normalizedRanges === [], 422, $emptyMessage);
 
         $previousUpToKg = 0.0;
 
-        foreach ($ranges as $index => $range) {
+        foreach ($normalizedRanges as $range) {
             if ($range['up_to_kg'] <= $previousUpToKg) {
                 abort(422, 'Tariff per kg ranges must be in increasing weight order.');
             }
@@ -142,9 +230,6 @@ class PartnerController extends Controller
             $previousUpToKg = $range['up_to_kg'];
         }
 
-        $validated['tariff'] = 0;
-        $validated['tariff_per_kg_ranges'] = $ranges;
-
-        return $validated;
+        return $normalizedRanges;
     }
 }

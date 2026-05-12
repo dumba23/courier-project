@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 
-export function ProductField({
+export function InlineTextField({
   className = '',
   disabled,
-  inputMode = 'text',
   itemId,
   value,
   onSave,
+  placeholder = '',
 }) {
   const [draftValue, setDraftValue] = useState(value ?? '')
 
@@ -27,10 +27,7 @@ export function ProductField({
   return (
     <input
       className={className}
-      type={inputMode === 'decimal' ? 'number' : 'text'}
-      min={inputMode === 'decimal' ? '0' : undefined}
-      step={inputMode === 'decimal' ? '0.01' : undefined}
-      inputMode={inputMode === 'decimal' ? 'decimal' : undefined}
+      type="text"
       value={draftValue}
       onChange={(event) => setDraftValue(event.target.value)}
       onBlur={saveIfNeeded}
@@ -41,6 +38,7 @@ export function ProductField({
           event.currentTarget.blur()
         }
       }}
+      placeholder={placeholder}
       disabled={disabled}
     />
   )

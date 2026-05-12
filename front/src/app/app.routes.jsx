@@ -4,6 +4,7 @@ import { DashboardLayout } from './core/layout/dashboard-layout/dashboard-layout
 import { CourierManagePage } from './pages/courier-manage-page/courier-manage-page.jsx'
 import { CourierPayrollPage } from './pages/courier-payroll-page/courier-payroll-page.jsx'
 import { CourierCommentTemplatesPage } from './pages/courier-comment-templates-page/courier-comment-templates-page.jsx'
+import { CitiesPage } from './pages/cities-page/cities-page.jsx'
 import { DeliveryItemsPage } from './pages/delivery-items-page/delivery-items-page.jsx'
 import { DistrictsPage } from './pages/districts-page/districts-page.jsx'
 import { DistrictStreetsPage } from './pages/district-streets-page/district-streets-page.jsx'
@@ -61,6 +62,10 @@ export function AppRoutes({ auth, onAuthChange }) {
         <Route
           path="districts"
           element={auth?.user?.role === 'admin' ? <DistrictsPage auth={auth} /> : <Navigate to="/delivery-items" replace />}
+        />
+        <Route
+          path="cities"
+          element={auth?.user?.role === 'admin' ? <CitiesPage auth={auth} /> : <Navigate to="/delivery-items" replace />}
         />
         <Route
           path="district-streets"

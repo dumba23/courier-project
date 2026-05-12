@@ -1,6 +1,7 @@
 import { CalendarIcon, CheckIcon } from "../../core/ui/icons.jsx";
 import { CourierCommentField } from "./components/courier-comment-field.jsx";
 import { CourierAssignField } from "./components/courier-assign-field.jsx";
+import { InlineTextField } from "./components/inline-text-field.jsx";
 import { MobileOptionSelect } from "./components/mobile-option-select.jsx";
 import { ProductField } from "./components/product-field.jsx";
 import {
@@ -44,13 +45,20 @@ export function buildDeliveryItemColumns({
   courierCommentUpdateId,
   courierCommentTemplates,
   courierUpdateId,
+  districtUpdateId,
+  cityUpdateId,
+  priceUpdateId,
   productUpdateId,
   additionalStatusUpdateId,
   warehouseStateUpdateId,
+  cities,
   filters,
   handleAdditionalStatusUpdate,
   handleCourierCommentUpdate,
   handleProductUpdate,
+  handlePriceUpdate,
+  handleDistrictUpdate,
+  handleCityUpdate,
   handleWarehouseStateUpdate,
   getFilterTriggerRef,
   handleCourierUpdate,
@@ -86,6 +94,7 @@ export function buildDeliveryItemColumns({
       cell: (item) => (
         item.can_edit_product ? (
           <ProductField
+            className="delivery-items-table__status-select delivery-items-page__product-input"
             disabled={productUpdateId === item.id}
             inputMode={item.is_tariff_per_kg_product ? "decimal" : "text"}
             itemId={item.id}
@@ -221,7 +230,20 @@ export function buildDeliveryItemColumns({
           placeholder="ფილტრი"
         />
       ),
-      cell: (item) => item.district,
+      cell: (item) => (
+        item.can_edit_district ? (
+          <InlineTextField
+            className="delivery-items-table__status-select"
+            disabled={districtUpdateId === item.id}
+            itemId={item.id}
+            value={item.district ?? ""}
+            placeholder="უბანი"
+            onSave={handleDistrictUpdate}
+          />
+        ) : (
+          item.district
+        )
+      ),
       label: "უბანი",
     },
     {
@@ -235,7 +257,25 @@ export function buildDeliveryItemColumns({
           placeholder="ფილტრი"
         />
       ),
-      cell: (item) => item.city,
+      cell: (item) => (
+        item.can_edit_city ? (
+          <select
+            className="delivery-items-table__status-select"
+            value={item.city ?? ""}
+            onChange={(event) => handleCityUpdate(item.id, event.target.value)}
+            disabled={cityUpdateId === item.id}
+          >
+            <option value="">Choose city</option>
+            {cities.map((city) => (
+              <option key={city.id} value={city.name}>
+                {city.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          item.city
+        )
+      ),
       label: "ქალაქი",
     },
     {
@@ -263,7 +303,20 @@ export function buildDeliveryItemColumns({
           placeholder="ფილტრი"
         />
       ),
-      cell: (item) => item.price,
+      cell: (item) => (
+        item.can_edit_price ? (
+          <InlineTextField
+            className="delivery-items-table__status-select"
+            disabled={priceUpdateId === item.id}
+            itemId={item.id}
+            value={item.price ?? ""}
+            placeholder="ფასი"
+            onSave={handlePriceUpdate}
+          />
+        ) : (
+          item.price
+        )
+      ),
       label: "ფასი",
     },
     {

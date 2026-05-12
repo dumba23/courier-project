@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../../core/http/api.js";
 import { DataTable } from "../../core/ui/data-table.jsx";
+import { getSortIndicator } from "../delivery-items-page/delivery-items.utils.js";
 import "../courier-payroll-page/courier-payroll-page.scss";
 
 function getTodayValue() {
@@ -92,6 +93,32 @@ function formatPartnerTariff(partner) {
   return ranges.map((range) => `${range.up_to_kg} კგ - ${range.price} ₾`).join(", ");
 }
 
+function getComparableValue(item, key) {
+  const value = item?.[key];
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  if (typeof value === "number") {
+    return value;
+  }
+
+  return String(value).toLowerCase();
+}
+
+function renderSortHeader(label, key, sort, onSort) {
+  return (
+    <button
+      type="button"
+      className="table-sort"
+      onClick={() => onSort(key)}
+    >
+      {label} {getSortIndicator(sort, key)}
+    </button>
+  );
+}
+
 export function PartnerPayrollPage({ auth }) {
   const [partners, setPartners] = useState([]);
   const [selectedPartnerId, setSelectedPartnerId] = useState("");
@@ -101,6 +128,8 @@ export function PartnerPayrollPage({ auth }) {
   const [summary, setSummary] = useState({
     count: 0,
     price_total: 0,
+    transferred_total: 0,
+    collected_total: 0,
     base_total: 0,
     extra_total: 0,
   });
@@ -109,6 +138,15 @@ export function PartnerPayrollPage({ auth }) {
   const [isMarkingPaid, setIsMarkingPaid] = useState(false);
   const [savingExtraItemId, setSavingExtraItemId] = useState(null);
   const [status, setStatus] = useState({ type: "", message: "" });
+  const [filters, setFilters] = useState({
+    district: "",
+    city: "",
+    address: "",
+  });
+  const [sort, setSort] = useState({
+    key: "address",
+    direction: "asc",
+  });
 
   useEffect(() => {
     async function loadPartners() {
@@ -143,6 +181,8 @@ export function PartnerPayrollPage({ auth }) {
       setSummary({
         count: 0,
         price_total: 0,
+        transferred_total: 0,
+        collected_total: 0,
         base_total: 0,
         extra_total: 0,
       });
@@ -178,6 +218,8 @@ export function PartnerPayrollPage({ auth }) {
             payload.summary ?? {
               count: 0,
               price_total: 0,
+              transferred_total: 0,
+              collected_total: 0,
               base_total: 0,
               extra_total: 0,
             },
@@ -194,6 +236,8 @@ export function PartnerPayrollPage({ auth }) {
           setSummary({
             count: 0,
             price_total: 0,
+            transferred_total: 0,
+            collected_total: 0,
             base_total: 0,
             extra_total: 0,
           });
@@ -212,9 +256,61 @@ export function PartnerPayrollPage({ auth }) {
     };
   }, [auth?.token, selectedPartnerId, selectedDay]);
 
-  const totalPayable = useMemo(() => {
+  const partnerNetItemMoney = useMemo(() => {
+    return Number(summary.price_total ?? 0) - Number(summary.transferred_total ?? 0);
+  }, [summary.price_total, summary.transferred_total]);
+
+  const ourTariffSide = useMemo(() => {
     return Number(summary.base_total ?? 0) + Number(summary.extra_total ?? 0);
   }, [summary.base_total, summary.extra_total]);
+
+  const totalPayable = useMemo(() => {
+    return partnerNetItemMoney - ourTariffSide;
+  }, [partnerNetItemMoney, ourTariffSide]);
+
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      const districtMatches = !filters.district
+        || String(item.district ?? "").toLowerCase().includes(filters.district.toLowerCase());
+      const cityMatches = !filters.city
+        || String(item.city ?? "").toLowerCase().includes(filters.city.toLowerCase());
+      const addressMatches = !filters.address
+        || String(item.address ?? "").toLowerCase().includes(filters.address.toLowerCase());
+
+      return districtMatches && cityMatches && addressMatches;
+    });
+  }, [filters.address, filters.city, filters.district, items]);
+
+  const sortedItems = useMemo(() => {
+    return [...filteredItems].sort((left, right) => {
+      const leftValue = getComparableValue(left, sort.key);
+      const rightValue = getComparableValue(right, sort.key);
+
+      if (leftValue === rightValue) {
+        return 0;
+      }
+
+      const result = leftValue > rightValue ? 1 : -1;
+
+      return sort.direction === "asc" ? result : -result;
+    });
+  }, [filteredItems, sort.direction, sort.key]);
+
+  function handleFilterChange(event) {
+    const { name, value } = event.target;
+
+    setFilters((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  }
+
+  function handleSort(key) {
+    setSort((current) => ({
+      key,
+      direction: current.key === key && current.direction === "asc" ? "desc" : "asc",
+    }));
+  }
 
   async function handlePartnerExtraSave(itemId, nextValue) {
     setSavingExtraItemId(itemId);
@@ -363,11 +459,23 @@ export function PartnerPayrollPage({ auth }) {
           <strong>{summary.price_total ?? 0} ₾</strong>
         </div>
         <div className="courier-payroll-page__summary-card">
-          <span>დამატებითი თანხის ჯამი</span>
-          <strong>{summary.extra_total ?? 0} ₾</strong>
+          <span>პარტნიორის მხარეს აღებული</span>
+          <strong>{summary.transferred_total ?? 0} ₾</strong>
+        </div>
+        <div className="courier-payroll-page__summary-card">
+          <span>ფასი - პარტნიორის მხარეს აღებული</span>
+          <strong>{partnerNetItemMoney.toFixed(2)} ₾</strong>
+        </div>
+        <div className="courier-payroll-page__summary-card">
+          <span>ადმინის მხარეს აღებული</span>
+          <strong>{summary.collected_total ?? 0} ₾</strong>
+        </div>
+        <div className="courier-payroll-page__summary-card">
+          <span>ჩვენი ტარიფი + დამატებითი</span>
+          <strong>{ourTariffSide.toFixed(2)} ₾</strong>
         </div>
         <div className="courier-payroll-page__summary-card courier-payroll-page__summary-card--accent">
-          <span>ჯამში გადასახდელი</span>
+          <span>პარტნიორს მისაცემი ადმინისგან</span>
           <strong>{totalPayable.toFixed(2)} ₾</strong>
         </div>
       </div>
@@ -379,20 +487,56 @@ export function PartnerPayrollPage({ auth }) {
           <DataTable
             tableClassName="courier-payroll-table"
             headers={[
-              "პროდუქტი",
-              "უბანი",
-              "ქალაქი",
-              "მისამართი",
-              "კურიერის კომენტარი",
-              "ფასი",
-              "პარტნიორის ანგარიშზე",
-              "ადმინის მხარეს აღებული",
-              "დარიცხული ტარიფი",
-              "პარტნიორის დამატებითი",
-              "გადახდა",
+              renderSortHeader("პროდუქტი", "product", sort, handleSort),
+              renderSortHeader("უბანი", "district", sort, handleSort),
+              renderSortHeader("ქალაქი", "city", sort, handleSort),
+              renderSortHeader("მისამართი", "address", sort, handleSort),
+              renderSortHeader("კურიერის კომენტარი", "courier_comment", sort, handleSort),
+              renderSortHeader("ფასი", "price", sort, handleSort),
+              renderSortHeader("პარტნიორის ანგარიშზე", "transferred_to_shop_amount", sort, handleSort),
+              renderSortHeader("ადმინის მხარეს აღებული", "collected_amount", sort, handleSort),
+              renderSortHeader("დარიცხული ტარიფი", "base_tariff_amount", sort, handleSort),
+              renderSortHeader("პარტნიორის დამატებითი", "partner_extra_price_per_item", sort, handleSort),
+              renderSortHeader("გადახდა", "partner_paid_at", sort, handleSort),
             ]}
+            filtersRow={(
+              <tr className="delivery-items-table__filters">
+                <th />
+                <th>
+                  <input
+                    name="district"
+                    value={filters.district}
+                    onChange={handleFilterChange}
+                    placeholder="ფილტრი"
+                  />
+                </th>
+                <th>
+                  <input
+                    name="city"
+                    value={filters.city}
+                    onChange={handleFilterChange}
+                    placeholder="ფილტრი"
+                  />
+                </th>
+                <th>
+                  <input
+                    name="address"
+                    value={filters.address}
+                    onChange={handleFilterChange}
+                    placeholder="ფილტრი"
+                  />
+                </th>
+                <th />
+                <th />
+                <th />
+                <th />
+                <th />
+                <th />
+                <th />
+              </tr>
+            )}
             emptyMessage="ამ დღეს პარტნიორს მიწოდებული ნივთები არ აქვს."
-            rows={items.map((item) => (
+            rows={sortedItems.map((item) => (
               <tr key={item.id}>
                 <td>{item.product || "-"}</td>
                 <td>{item.district || "-"}</td>

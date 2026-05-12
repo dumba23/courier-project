@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CityController;
 use App\Http\Controllers\CourierController;
 use App\Http\Controllers\CourierPayrollController;
 use App\Http\Controllers\CourierCommentTemplateController;
@@ -17,11 +18,14 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/cities', [CityController::class, 'index']);
     Route::get('/courier-comment-templates', [CourierCommentTemplateController::class, 'index']);
     Route::get('/delivery-items', [DeliveryItemController::class, 'index']);
     Route::post('/delivery-items', [DeliveryItemController::class, 'store']);
     Route::patch('/delivery-items/bulk', [DeliveryItemController::class, 'bulkUpdate']);
     Route::patch('/delivery-items/{deliveryItem}/product', [DeliveryItemController::class, 'updateProduct']);
+    Route::patch('/delivery-items/{deliveryItem}/price', [DeliveryItemController::class, 'updatePrice']);
+    Route::patch('/delivery-items/{deliveryItem}/location', [DeliveryItemController::class, 'updateLocation']);
     Route::patch('/delivery-items/{deliveryItem}/courier', [DeliveryItemController::class, 'updateCourier']);
     Route::patch('/delivery-items/{deliveryItem}/courier-comment', [DeliveryItemController::class, 'updateCourierComment']);
     Route::patch('/delivery-items/{deliveryItem}/status', [DeliveryItemController::class, 'updateStatus']);
@@ -41,6 +45,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/couriers', [CourierController::class, 'index']);
         Route::post('/couriers', [CourierController::class, 'store']);
         Route::put('/couriers/{courier}', [CourierController::class, 'update']);
+        Route::post('/cities', [CityController::class, 'store']);
+        Route::put('/cities/{city}', [CityController::class, 'update']);
         Route::get('/courier-payroll', [CourierPayrollController::class, 'index']);
         Route::patch('/courier-payroll/{deliveryItem}/extra-price', [CourierPayrollController::class, 'updateExtraPrice']);
         Route::patch('/courier-payroll/{deliveryItem}/deduction-price', [CourierPayrollController::class, 'updateDeductionPrice']);

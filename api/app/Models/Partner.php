@@ -16,6 +16,7 @@ class Partner extends Model
         'tariff',
         'tariff_per_kg',
         'tariff_per_kg_ranges',
+        'city_tariff_overrides',
     ];
 
     protected function casts(): array
@@ -23,6 +24,7 @@ class Partner extends Model
         return [
             'tariff_per_kg' => 'boolean',
             'tariff_per_kg_ranges' => 'array',
+            'city_tariff_overrides' => 'array',
         ];
     }
 

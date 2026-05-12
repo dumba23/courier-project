@@ -52,11 +52,14 @@ class PartnerPayrollController extends Controller
                 'tariff' => $partner->tariff,
                 'tariff_per_kg' => $partner->tariff_per_kg,
                 'tariff_per_kg_ranges' => $partner->tariff_per_kg_ranges,
+                'city_tariff_overrides' => $partner->city_tariff_overrides,
             ],
             'items' => $items,
             'summary' => [
                 'count' => count($items),
                 'price_total' => round(collect($items)->sum(fn (array $item) => (float) $item['price']), 2),
+                'transferred_total' => round(collect($items)->sum(fn (array $item) => (float) ($item['transferred_to_shop_amount'] ?? 0)), 2),
+                'collected_total' => round(collect($items)->sum(fn (array $item) => (float) ($item['collected_amount'] ?? 0)), 2),
                 'base_total' => round(collect($items)->sum(fn (array $item) => (float) $item['base_tariff_amount']), 2),
                 'extra_total' => round(collect($items)->sum(fn (array $item) => (float) $item['partner_extra_price_per_item']), 2),
             ],
@@ -125,12 +128,19 @@ class PartnerPayrollController extends Controller
 
     private function resolvePartnerTariffAmount(Partner $partner, DeliveryItem $deliveryItem): float
     {
+        $cityOverride = $this->findCityTariffOverride($partner, $deliveryItem->city);
+
         if (! $partner->tariff_per_kg) {
+            if ($cityOverride && array_key_exists('tariff', $cityOverride)) {
+                return (float) $cityOverride['tariff'];
+            }
+
             return (float) $partner->tariff;
         }
 
         $weight = is_numeric($deliveryItem->product) ? (float) $deliveryItem->product : null;
-        $ranges = collect($partner->tariff_per_kg_ranges ?? [])
+        $rangeSource = $cityOverride['tariff_per_kg_ranges'] ?? $partner->tariff_per_kg_ranges ?? [];
+        $ranges = collect($rangeSource)
             ->filter(fn ($range): bool => is_array($range) && isset($range['up_to_kg'], $range['price']))
             ->sortBy('up_to_kg')
             ->values();
@@ -146,5 +156,23 @@ class PartnerPayrollController extends Controller
         }
 
         return (float) ($ranges->last()['price'] ?? 0);
+    }
+
+    private function findCityTariffOverride(Partner $partner, ?string $city): ?array
+    {
+        $cityName = mb_strtolower(trim((string) $city));
+
+        if ($cityName === '') {
+            return null;
+        }
+
+        return collect($partner->city_tariff_overrides ?? [])
+            ->first(function ($override) use ($cityName): bool {
+                if (! is_array($override)) {
+                    return false;
+                }
+
+                return mb_strtolower(trim((string) ($override['city_name'] ?? ''))) === $cityName;
+            });
     }
 }

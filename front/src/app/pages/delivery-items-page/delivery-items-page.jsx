@@ -53,6 +53,7 @@ function applyViewScopeToItems(items, viewScope) {
 export function DeliveryItemsPage({ auth, viewScope = 'active' }) {
   const storedTableState = useMemo(() => readStoredTableState(viewScope), [viewScope])
   const [deliveryItems, setDeliveryItems] = useState([])
+  const [cities, setCities] = useState([])
   const [partners, setPartners] = useState([])
   const [couriers, setCouriers] = useState([])
   const [courierCommentTemplates, setCourierCommentTemplates] = useState([])
@@ -62,6 +63,9 @@ export function DeliveryItemsPage({ auth, viewScope = 'active' }) {
   const [statusUpdateId, setStatusUpdateId] = useState(null)
   const [courierUpdateId, setCourierUpdateId] = useState(null)
   const [courierCommentUpdateId, setCourierCommentUpdateId] = useState(null)
+  const [districtUpdateId, setDistrictUpdateId] = useState(null)
+  const [cityUpdateId, setCityUpdateId] = useState(null)
+  const [priceUpdateId, setPriceUpdateId] = useState(null)
   const [productUpdateId, setProductUpdateId] = useState(null)
   const [additionalStatusUpdateId, setAdditionalStatusUpdateId] = useState(null)
   const [warehouseStateUpdateId, setWarehouseStateUpdateId] = useState(null)
@@ -204,6 +208,36 @@ export function DeliveryItemsPage({ auth, viewScope = 'active' }) {
       isCancelled = true
     }
   }, [auth?.token, isAdmin])
+
+  useEffect(() => {
+    if (!auth?.token) {
+      return undefined
+    }
+
+    let isCancelled = false
+
+    async function loadCities() {
+      try {
+        const payload = await apiRequest('/api/cities', {
+          token: auth?.token,
+        })
+
+        if (!isCancelled) {
+          setCities(payload.cities ?? [])
+        }
+      } catch (requestError) {
+        if (!isCancelled) {
+          setError(requestError.message)
+        }
+      }
+    }
+
+    loadCities()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [auth?.token])
 
   useEffect(() => {
     if (!auth?.token) {
@@ -561,6 +595,91 @@ export function DeliveryItemsPage({ auth, viewScope = 'active' }) {
     }
   }
 
+  async function handlePriceUpdate(deliveryItemId, nextPrice) {
+    setPriceUpdateId(deliveryItemId)
+    setError('')
+    setNotice('')
+
+    try {
+      const payload = await apiRequest(`/api/delivery-items/${deliveryItemId}/price`, {
+        method: 'PATCH',
+        token: auth?.token,
+        body: JSON.stringify({
+          price: Number(nextPrice || 0),
+        }),
+      })
+
+      setDeliveryItems((current) => applyViewScopeToItems(
+        current.map((item) => (
+          item.id === deliveryItemId ? payload.delivery_item : item
+        )),
+        viewScope,
+      ))
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setPriceUpdateId(null)
+    }
+  }
+
+  async function handleDistrictUpdate(deliveryItemId, nextDistrict) {
+    setDistrictUpdateId(deliveryItemId)
+    setError('')
+    setNotice('')
+
+    try {
+      const currentItem = deliveryItems.find((item) => item.id === deliveryItemId)
+      const payload = await apiRequest(`/api/delivery-items/${deliveryItemId}/location`, {
+        method: 'PATCH',
+        token: auth?.token,
+        body: JSON.stringify({
+          district: nextDistrict,
+          city: currentItem?.city ?? '',
+        }),
+      })
+
+      setDeliveryItems((current) => applyViewScopeToItems(
+        current.map((item) => (
+          item.id === deliveryItemId ? payload.delivery_item : item
+        )),
+        viewScope,
+      ))
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setDistrictUpdateId(null)
+    }
+  }
+
+  async function handleCityUpdate(deliveryItemId, nextCity) {
+    setCityUpdateId(deliveryItemId)
+    setError('')
+    setNotice('')
+
+    try {
+      const currentItem = deliveryItems.find((item) => item.id === deliveryItemId)
+      const payload = await apiRequest(`/api/delivery-items/${deliveryItemId}/location`, {
+        method: 'PATCH',
+        token: auth?.token,
+        body: JSON.stringify({
+          district: currentItem?.district ?? '',
+          city: nextCity,
+        }),
+      })
+
+      setDeliveryItems((current) => applyViewScopeToItems(
+        current.map((item) => (
+          item.id === deliveryItemId ? payload.delivery_item : item
+        )),
+        viewScope,
+      ))
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setCityUpdateId(null)
+    }
+  }
+
   async function handleAdditionalStatusUpdate(deliveryItemId, nextStatus) {
     setAdditionalStatusUpdateId(deliveryItemId)
     setError('')
@@ -813,26 +932,12 @@ export function DeliveryItemsPage({ auth, viewScope = 'active' }) {
       return
     }
 
-    const headers = ['product', 'person_name', 'phone', 'city', 'address', 'price', 'comment', 'delivery_date']
-    const exampleRow = {
-      product: 'Electronics package',
-      person_name: 'Nino Beridze',
-      phone: '+995555100111',
-      city: 'თბილისი',
-      address: 'Saburtalo, Pekini Avenue 12',
-      price: 35,
-      comment: 'Call on arrival.',
-      delivery_date: '2026-05-10',
-    }
-
-    const worksheet = XLSX.utils.json_to_sheet([exampleRow], { header: headers })
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Delivery Items')
-    XLSX.writeFile(workbook, 'delivery-items-import.xlsx')
+    void downloadSellerImportTemplate()
   }
 
   async function downloadAdminImportTemplate() {
     let availablePartners = partners
+    let availableCities = cities
 
     if (!availablePartners.length) {
       try {
@@ -845,10 +950,23 @@ export function DeliveryItemsPage({ auth, viewScope = 'active' }) {
       }
     }
 
+    if (!availableCities.length) {
+      try {
+        const citiesPayload = await apiRequest('/api/cities', { token: auth?.token })
+        availableCities = citiesPayload.cities ?? []
+      } catch (requestError) {
+        setError(requestError.message)
+
+        return
+      }
+    }
+
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('Delivery Items')
     const partnerOptionsSheet = workbook.addWorksheet('Partner Options')
+    const cityOptionsSheet = workbook.addWorksheet('City Options')
     partnerOptionsSheet.state = 'veryHidden'
+    cityOptionsSheet.state = 'veryHidden'
 
     const headers = [
       'partner_email',
@@ -895,6 +1013,11 @@ export function DeliveryItemsPage({ auth, viewScope = 'active' }) {
         .map((partner) => [partner.user?.email])
         .filter(([email]) => Boolean(email)),
     )
+    cityOptionsSheet.addRows(
+      availableCities
+        .map((city) => [city.name])
+        .filter(([name]) => Boolean(name)),
+    )
 
     if (partnerOptionsSheet.rowCount > 0) {
       for (let rowNumber = 2; rowNumber <= 500; rowNumber += 1) {
@@ -909,6 +1032,19 @@ export function DeliveryItemsPage({ auth, viewScope = 'active' }) {
       }
     }
 
+    if (cityOptionsSheet.rowCount > 0) {
+      for (let rowNumber = 2; rowNumber <= 500; rowNumber += 1) {
+        worksheet.getCell(`E${rowNumber}`).dataValidation = {
+          type: 'list',
+          allowBlank: true,
+          formulae: [`'City Options'!$A$1:$A$${cityOptionsSheet.rowCount}`],
+          showErrorMessage: true,
+          errorTitle: 'Invalid city',
+          error: 'Please select a city from the dropdown list.',
+        }
+      }
+    }
+
     const buffer = await workbook.xlsx.writeBuffer()
     const blob = new Blob([buffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -917,6 +1053,84 @@ export function DeliveryItemsPage({ auth, viewScope = 'active' }) {
     const anchor = document.createElement('a')
     anchor.href = url
     anchor.download = 'delivery-items-import-admin.xlsx'
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function downloadSellerImportTemplate() {
+    let availableCities = cities
+
+    if (!availableCities.length) {
+      try {
+        const citiesPayload = await apiRequest('/api/cities', { token: auth?.token })
+        availableCities = citiesPayload.cities ?? []
+      } catch (requestError) {
+        setError(requestError.message)
+
+        return
+      }
+    }
+
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet('Delivery Items')
+    const cityOptionsSheet = workbook.addWorksheet('City Options')
+    cityOptionsSheet.state = 'veryHidden'
+
+    const headers = ['product', 'person_name', 'phone', 'city', 'address', 'price', 'comment', 'delivery_date']
+    const exampleRow = [
+      'Electronics package',
+      'Nino Beridze',
+      '+995555100111',
+      availableCities[0]?.name ?? 'თბილისი',
+      'Saburtalo, Pekini Avenue 12',
+      35,
+      'Call on arrival.',
+      '2026-05-10',
+    ]
+
+    worksheet.addRow(headers)
+    worksheet.addRow(exampleRow)
+
+    worksheet.columns = [
+      { key: 'product', width: 24 },
+      { key: 'person_name', width: 24 },
+      { key: 'phone', width: 18 },
+      { key: 'city', width: 18 },
+      { key: 'address', width: 34 },
+      { key: 'price', width: 12 },
+      { key: 'comment', width: 24 },
+      { key: 'delivery_date', width: 16 },
+    ]
+
+    worksheet.getRow(1).font = { bold: true }
+
+    cityOptionsSheet.addRows(
+      availableCities
+        .map((city) => [city.name])
+        .filter(([name]) => Boolean(name)),
+    )
+
+    if (cityOptionsSheet.rowCount > 0) {
+      for (let rowNumber = 2; rowNumber <= 500; rowNumber += 1) {
+        worksheet.getCell(`D${rowNumber}`).dataValidation = {
+          type: 'list',
+          allowBlank: true,
+          formulae: [`'City Options'!$A$1:$A$${cityOptionsSheet.rowCount}`],
+          showErrorMessage: true,
+          errorTitle: 'Invalid city',
+          error: 'Please select a city from the dropdown list.',
+        }
+      }
+    }
+
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = 'delivery-items-import.xlsx'
     anchor.click()
     URL.revokeObjectURL(url)
   }
@@ -1121,12 +1335,19 @@ export function DeliveryItemsPage({ auth, viewScope = 'active' }) {
     courierCommentUpdateId,
     courierFilterLabel,
     courierUpdateId,
+    districtUpdateId,
+    cityUpdateId,
+    priceUpdateId,
     productUpdateId,
     warehouseStateUpdateId,
+    cities,
     filters,
     handleAdditionalStatusUpdate,
     handleCourierCommentUpdate,
     handleProductUpdate,
+    handlePriceUpdate,
+    handleDistrictUpdate,
+    handleCityUpdate,
     handleWarehouseStateUpdate,
     getFilterTriggerRef,
     handleCourierUpdate,
@@ -1280,6 +1501,7 @@ export function DeliveryItemsPage({ auth, viewScope = 'active' }) {
 
       {isCreateDialogOpen ? (
         <CreateDeliveriesDialog
+          cities={cities}
           draftItems={draftItems}
           isTariffPerKgItem={isTariffPerKgItem}
           isAdmin={isAdmin}
@@ -1295,6 +1517,7 @@ export function DeliveryItemsPage({ auth, viewScope = 'active' }) {
 
       {isImportDialogOpen ? (
         <ImportPreviewDialog
+          cities={cities}
           importErrors={importErrors}
           importFileName={importFileName}
           importedItems={importedItems}

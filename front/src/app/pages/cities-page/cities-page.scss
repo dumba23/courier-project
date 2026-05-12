@@ -1,4 +1,4 @@
-.partner-manage-page {
+.cities-page {
   display: grid;
   gap: 14px;
 
@@ -28,75 +28,17 @@
     grid-template-columns: 1fr;
   }
 
-  &__checkbox {
+  &__toggle {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
 
     input {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       margin: 0;
       accent-color: var(--color-ink);
-    }
-  }
-
-  &__tariff-ranges-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 10px;
-  }
-
-  &__tariff-ranges {
-    display: grid;
-    gap: 10px;
-  }
-
-  &__city-overrides {
-    display: grid;
-    gap: 12px;
-  }
-
-  &__city-override-card {
-    display: grid;
-    gap: 12px;
-    padding: 14px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-panel);
-    background: color-mix(in srgb, var(--color-panel) 92%, white);
-  }
-
-  &__city-override-head {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 10px;
-    align-items: end;
-  }
-
-  &__city-override-ranges {
-    display: grid;
-    gap: 10px;
-  }
-
-  &__tariff-range-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-    gap: 10px;
-    align-items: center;
-  }
-
-  &__hint {
-    margin: 0;
-    color: var(--color-copy);
-    font-size: 0.95rem;
-  }
-
-  &__full {
-    @media (min-width: 768px) {
-      grid-column: 1 / -1;
     }
   }
 
@@ -108,9 +50,9 @@
   }
 }
 
-.partner-table {
+.cities-table {
   width: 100%;
-  min-width: 900px;
+  min-width: 560px;
   border-collapse: collapse;
 
   th,
@@ -118,6 +60,7 @@
     padding: 14px 16px;
     text-align: left;
     border-bottom: 1px solid var(--color-border);
+    vertical-align: top;
   }
 
   th {
@@ -131,17 +74,12 @@
 
   td {
     color: var(--color-ink);
-    vertical-align: top;
   }
 
   &__actions {
     width: 1%;
-    text-align: right;
     white-space: nowrap;
-  }
-
-  &__edit {
-    min-height: 40px;
+    text-align: right;
   }
 
   tbody tr:last-child td {
@@ -150,7 +88,7 @@
 }
 
 @media (min-width: 768px) {
-  .partner-manage-page {
+  .cities-page {
     gap: 16px;
 
     &__form-grid {

@@ -130,6 +130,13 @@ export function DashboardLayout({ auth, onAuthChange }) {
               </NavLink>
               <NavLink
                 className="nav-link nav-link--sidebar"
+                to="/cities"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                Cities
+              </NavLink>
+              <NavLink
+                className="nav-link nav-link--sidebar"
                 to="/district-streets"
                 onClick={() => setIsSidebarOpen(false)}
               >

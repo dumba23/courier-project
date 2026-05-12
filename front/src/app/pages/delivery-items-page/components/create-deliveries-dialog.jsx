@@ -1,6 +1,7 @@
 import { CloseIcon, PlusIcon, TrashIcon } from "../../../core/ui/icons.jsx";
 
 export function CreateDeliveriesDialog({
+  cities,
   draftItems,
   isTariffPerKgItem,
   isAdmin,
@@ -122,13 +123,19 @@ export function CreateDeliveriesDialog({
                       />
                     </td>
                     <td>
-                      <input
+                      <select
                         value={item.city}
                         onChange={(event) =>
                           onUpdateItem(index, "city", event.target.value)
                         }
-                        placeholder="City"
-                      />
+                      >
+                        <option value="">Choose city</option>
+                        {cities.map((city) => (
+                          <option key={city.id} value={city.name}>
+                            {city.name}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td>
                       <input

@@ -347,6 +347,74 @@ class DeliveryItemController extends Controller
         ]);
     }
 
+    public function updatePrice(Request $request, DeliveryItem $deliveryItem): JsonResponse
+    {
+        $user = $request->user()->loadMissing(['courier:id,user_id', 'partner:id,user_id']);
+
+        abort_unless(
+            $this->canEditPrice($user, $deliveryItem),
+            403,
+            'You are not allowed to update this price.',
+        );
+
+        $validated = $request->validate([
+            'price' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $deliveryItem->update([
+            'price' => $validated['price'],
+        ]);
+
+        $deliveryItem->load([
+            'courier:id,first_name,last_name',
+            'partner:id,name,tariff_per_kg',
+        ]);
+        $deliveryItem->setAttribute('can_edit_status', $this->canEditStatus($user, $deliveryItem));
+        $deliveryItem->setAttribute('can_edit_courier_comment', $this->canEditCourierComment($user, $deliveryItem));
+
+        return response()->json([
+            'message' => 'Price updated successfully.',
+            'delivery_item' => $this->serializeDeliveryItem($deliveryItem, $user),
+        ]);
+    }
+
+    public function updateLocation(Request $request, DeliveryItem $deliveryItem): JsonResponse
+    {
+        $user = $request->user()->loadMissing(['partner:id,user_id']);
+
+        $validated = $request->validate([
+            'district' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        abort_unless(
+            $this->canEditDistrict($user, $deliveryItem) || $this->canEditCity($user, $deliveryItem),
+            403,
+            'You are not allowed to update location fields.',
+        );
+
+        $deliveryItem->update([
+            'district' => $this->canEditDistrict($user, $deliveryItem)
+                ? (filled($validated['district'] ?? null) ? trim($validated['district']) : null)
+                : $deliveryItem->district,
+            'city' => $this->canEditCity($user, $deliveryItem)
+                ? (filled($validated['city'] ?? null) ? trim($validated['city']) : 'თბილისი')
+                : $deliveryItem->city,
+        ]);
+
+        $deliveryItem->load([
+            'courier:id,first_name,last_name',
+            'partner:id,name,tariff_per_kg',
+        ]);
+        $deliveryItem->setAttribute('can_edit_status', $this->canEditStatus($user, $deliveryItem));
+        $deliveryItem->setAttribute('can_edit_courier_comment', $this->canEditCourierComment($user, $deliveryItem));
+
+        return response()->json([
+            'message' => 'Location updated successfully.',
+            'delivery_item' => $this->serializeDeliveryItem($deliveryItem, $user),
+        ]);
+    }
+
     public function updateAdditionalStatus(Request $request, DeliveryItem $deliveryItem): JsonResponse
     {
         $user = $request->user()->loadMissing(['courier:id,user_id', 'partner:id,user_id']);
@@ -714,12 +782,33 @@ class DeliveryItemController extends Controller
             return true;
         }
 
-        if ($user->role !== User::ROLE_SELLER || ! $user->partner) {
-            return false;
+        return $user->role === User::ROLE_SELLER
+            && $user->partner?->id === $deliveryItem->partner_id;
+    }
+
+    private function canEditPrice(User $user, DeliveryItem $deliveryItem): bool
+    {
+        if ($user->isAdmin()) {
+            return true;
         }
 
-        return $user->partner->tariff_per_kg
-            && $user->partner->id === $deliveryItem->partner_id;
+        return $user->role === User::ROLE_SELLER
+            && $user->partner?->id === $deliveryItem->partner_id;
+    }
+
+    private function canEditDistrict(User $user, DeliveryItem $deliveryItem): bool
+    {
+        return $user->isAdmin();
+    }
+
+    private function canEditCity(User $user, DeliveryItem $deliveryItem): bool
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        return $user->role === User::ROLE_SELLER
+            && $user->partner?->id === $deliveryItem->partner_id;
     }
 
     /**
@@ -746,6 +835,9 @@ class DeliveryItemController extends Controller
                 'transferred_to_shop_amount' => $deliveryItem->transferred_to_shop_amount,
                 'collected_amount' => $deliveryItem->collected_amount,
                 'can_edit_product' => $this->canEditProduct($user, $deliveryItem),
+                'can_edit_price' => $this->canEditPrice($user, $deliveryItem),
+                'can_edit_district' => $this->canEditDistrict($user, $deliveryItem),
+                'can_edit_city' => $this->canEditCity($user, $deliveryItem),
                 'is_tariff_per_kg_product' => (bool) $user->partner?->tariff_per_kg,
             ];
         }
@@ -774,6 +866,9 @@ class DeliveryItemController extends Controller
             'can_edit_status' => (bool) $deliveryItem->getAttribute('can_edit_status'),
             'can_edit_courier_comment' => $this->canEditCourierComment($user, $deliveryItem),
             'can_edit_product' => $this->canEditProduct($user, $deliveryItem),
+            'can_edit_price' => $this->canEditPrice($user, $deliveryItem),
+            'can_edit_district' => $this->canEditDistrict($user, $deliveryItem),
+            'can_edit_city' => $this->canEditCity($user, $deliveryItem),
             'is_tariff_per_kg_product' => (bool) $deliveryItem->partner?->tariff_per_kg,
             'courier' => $deliveryItem->courier,
             'partner' => $deliveryItem->partner,

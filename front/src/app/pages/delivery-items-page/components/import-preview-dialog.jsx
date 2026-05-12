@@ -2,6 +2,7 @@ import { CloseIcon } from '../../../core/ui/icons.jsx'
 import { DataTable } from '../../../core/ui/data-table.jsx'
 
 export function ImportPreviewDialog({
+  cities,
   importErrors,
   importFileName,
   importedItems,
@@ -100,10 +101,17 @@ export function ImportPreviewDialog({
                 />
               </td>
               <td>
-                <input
+                <select
                   value={item.city ?? ''}
                   onChange={(event) => onUpdateItem(index, 'city', event.target.value)}
-                />
+                >
+                  <option value="">Choose city</option>
+                  {cities.map((city) => (
+                    <option key={city.id} value={city.name}>
+                      {city.name}
+                    </option>
+                  ))}
+                </select>
               </td>
               <td>
                 <input
