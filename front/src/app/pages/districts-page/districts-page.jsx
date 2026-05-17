@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { CheckIcon, CloseIcon, EditIcon, PlusIcon } from '../../core/ui/icons.jsx'
 import { DataTable } from '../../core/ui/data-table.jsx'
 import { apiRequest } from '../../core/http/api.js'
+import { useI18n } from '../../core/i18n/i18n.context.jsx'
 import './districts-page.scss'
 
 const initialForm = {
@@ -11,6 +12,7 @@ const initialForm = {
 }
 
 export function DistrictsPage({ auth }) {
+  const { t } = useI18n()
   const [districts, setDistricts] = useState([])
   const [couriers, setCouriers] = useState([])
   const [form, setForm] = useState(initialForm)
@@ -122,10 +124,10 @@ export function DistrictsPage({ auth }) {
       setIsDialogOpen(false)
       setEditingDistrictId(null)
       setForm(initialForm)
-      setStatus({
-        type: 'success',
-        message: editingDistrictId ? 'District updated.' : 'District created.',
-      })
+        setStatus({
+          type: 'success',
+          message: editingDistrictId ? t('districts.updated') : t('districts.created'),
+        })
     } catch (requestError) {
       setStatus({
         type: 'error',
@@ -139,13 +141,13 @@ export function DistrictsPage({ auth }) {
   return (
     <section className="districts-page">
       <header className="districts-page__header">
-        <h2 className="page-title">Districts</h2>
+        <h2 className="page-title">{t('districts.title')}</h2>
         <button
           type="button"
           className="button-primary icon-button"
           onClick={openCreateDialog}
-          aria-label="Add district"
-          title="Add district"
+          aria-label={t('districts.add')}
+          title={t('districts.add')}
         >
           <PlusIcon className="action-icon" />
         </button>
@@ -158,24 +160,24 @@ export function DistrictsPage({ auth }) {
       ) : null}
 
       {isLoading ? (
-        <p className="status-message">Loading...</p>
+        <p className="status-message">{t('common.loading')}</p>
       ) : (
         <DataTable
           tableClassName="districts-table"
-          headers={['Name', 'Couriers', 'Status', '']}
-          emptyMessage="No districts."
+          headers={[t('common.name'), t('districts.couriers'), t('common.status'), '']}
+          emptyMessage={t('districts.empty')}
           rows={districts.map((district) => (
             <tr key={district.id}>
               <td>{district.name}</td>
               <td>{district.couriers?.length ? district.couriers.map((courier) => courier.name).join(', ') : '-'}</td>
-              <td>{district.is_active ? 'Active' : 'Inactive'}</td>
+              <td>{district.is_active ? t('common.active') : t('common.inactive')}</td>
               <td className="districts-table__actions">
                 <button
                   type="button"
                   className="button-secondary icon-button"
                   onClick={() => openEditDialog(district)}
-                  aria-label="Edit district"
-                  title="Edit district"
+                  aria-label={t('districts.edit')}
+                  title={t('districts.edit')}
                 >
                   <EditIcon className="action-icon" />
                 </button>
@@ -192,13 +194,13 @@ export function DistrictsPage({ auth }) {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="districts-page__dialog-head">
-              <h3>{editingDistrictId ? 'Edit district' : 'Add district'}</h3>
+              <h3>{editingDistrictId ? t('districts.edit') : t('districts.add')}</h3>
             </div>
 
             <form className="districts-page__form" onSubmit={handleSubmit}>
               <div className="field-grid districts-page__form-grid">
                 <label className="form-field">
-                  Name
+                  {t('common.name')}
                   <input
                     name="name"
                     value={form.name}
@@ -208,7 +210,7 @@ export function DistrictsPage({ auth }) {
                 </label>
 
                 <label className="form-field districts-page__toggle">
-                  <span>Active</span>
+                  <span>{t('common.active')}</span>
                   <input
                     type="checkbox"
                     name="is_active"
@@ -218,7 +220,7 @@ export function DistrictsPage({ auth }) {
                 </label>
 
                 <div className="form-field districts-page__full">
-                  Couriers
+                  {t('districts.couriers')}
                   <div className="districts-page__courier-list">
                     {couriers.map((courier) => {
                       const courierName = `${courier.first_name} ${courier.last_name}`

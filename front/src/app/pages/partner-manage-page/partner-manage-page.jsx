@@ -7,6 +7,7 @@ import {
 } from '../../core/ui/icons.jsx'
 import { DataTable } from '../../core/ui/data-table.jsx'
 import { apiRequest } from '../../core/http/api.js'
+import { useI18n } from '../../core/i18n/i18n.context.jsx'
 import './partner-manage-page.scss'
 
 function createEmptyTariffRange() {
@@ -90,6 +91,7 @@ function normalizeOverrideFormFromPartner(partner) {
 }
 
 export function PartnerManagePage({ auth }) {
+  const { t } = useI18n()
   const [partners, setPartners] = useState([])
   const [cities, setCities] = useState([])
   const [form, setForm] = useState(createInitialForm)
@@ -363,7 +365,7 @@ export function PartnerManagePage({ auth }) {
       setIsDialogOpen(false)
       setStatus({
         type: 'success',
-        message: isEditing ? 'Partner updated.' : 'Partner created.',
+        message: isEditing ? t('partners.updated') : t('partners.created'),
       })
     } catch (requestError) {
       setStatus({
@@ -380,13 +382,13 @@ export function PartnerManagePage({ auth }) {
   return (
     <section className="partner-manage-page">
       <header className="partner-manage-page__header">
-        <h2 className="page-title">Partners</h2>
+        <h2 className="page-title">{t('partners.title')}</h2>
         <button
           type="button"
           className="button-primary icon-button"
           onClick={openCreateDialog}
-          aria-label="Add partner"
-          title="Add partner"
+          aria-label={t('partners.add')}
+          title={t('partners.add')}
         >
           <PlusIcon className="action-icon" />
         </button>
@@ -399,12 +401,12 @@ export function PartnerManagePage({ auth }) {
       ) : null}
 
       {isLoading ? (
-        <p className="status-message">Loading...</p>
+        <p className="status-message">{t('common.loading')}</p>
       ) : (
         <DataTable
           tableClassName="partner-table"
-          headers={['Name', 'Email', 'Phone', 'Pickup address', 'Tariff', '']}
-          emptyMessage="No partners."
+          headers={[t('common.name'), t('common.email'), t('common.phone'), t('partners.pickupAddress'), t('couriers.tariff'), '']}
+          emptyMessage={t('partners.empty')}
           rows={partners.map((partner) => (
             <tr key={partner.id}>
               <td>{partner.name}</td>
@@ -417,8 +419,8 @@ export function PartnerManagePage({ auth }) {
                   type="button"
                   className="button-secondary partner-table__edit icon-button"
                   onClick={() => openEditDialog(partner)}
-                  aria-label={`Edit ${partner.name}`}
-                  title={`Edit ${partner.name}`}
+                  aria-label={`${t('common.edit')} ${partner.name}`}
+                  title={`${t('common.edit')} ${partner.name}`}
                 >
                   <EditIcon className="action-icon" />
                 </button>
@@ -435,19 +437,19 @@ export function PartnerManagePage({ auth }) {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="partner-manage-page__dialog-head">
-              <h3>{isEditing ? 'Edit partner' : 'Add partner'}</h3>
-              {isEditing ? <p>Leave password empty to keep the current password.</p> : null}
+              <h3>{isEditing ? t('partners.edit') : t('partners.add')}</h3>
+              {isEditing ? <p>{t('partners.leavePassword')}</p> : null}
             </div>
 
             <form className="partner-manage-page__form" onSubmit={handleSubmit}>
               <div className="field-grid partner-manage-page__form-grid">
                 <label className="form-field">
-                  Name
+                  {t('common.name')}
                   <input name="name" value={form.name} onChange={handleChange} required />
                 </label>
 
                 <label className="form-field">
-                  Email
+                  {t('common.email')}
                   <input
                     name="email"
                     type="email"
@@ -458,7 +460,7 @@ export function PartnerManagePage({ auth }) {
                 </label>
 
                 <label className="form-field">
-                  Phone
+                  {t('common.phone')}
                   <input
                     name="phone_number"
                     value={form.phone_number}
@@ -468,7 +470,7 @@ export function PartnerManagePage({ auth }) {
                 </label>
 
                 <label className="form-field partner-manage-page__checkbox">
-                  <span>Tariff per kg</span>
+                  <span>{t('partners.tariffPerKg')}</span>
                   <input
                     name="tariff_per_kg"
                     type="checkbox"
@@ -480,7 +482,7 @@ export function PartnerManagePage({ auth }) {
                 {form.tariff_per_kg ? (
                   <div className="form-field partner-manage-page__full">
                     <div className="partner-manage-page__tariff-ranges-head">
-                      <span>Default tariff ranges</span>
+                      <span>{t('partners.defaultTariffRanges')}</span>
                       <button
                         type="button"
                         className="button-secondary icon-button"
@@ -501,7 +503,7 @@ export function PartnerManagePage({ auth }) {
                             step="0.01"
                             value={range.up_to_kg}
                             onChange={(event) => handleRangeChange(index, 'up_to_kg', event.target.value)}
-                            placeholder="Up to kg"
+                            placeholder={t('partners.upToKg')}
                             required={form.tariff_per_kg}
                           />
                           <input
@@ -510,7 +512,7 @@ export function PartnerManagePage({ auth }) {
                             step="0.01"
                             value={range.price}
                             onChange={(event) => handleRangeChange(index, 'price', event.target.value)}
-                            placeholder="Price"
+                            placeholder={t('partners.price')}
                             required={form.tariff_per_kg}
                           />
                           <button
@@ -529,7 +531,7 @@ export function PartnerManagePage({ auth }) {
                   </div>
                 ) : (
                   <label className="form-field">
-                    Default tariff
+                    {t('partners.defaultTariff')}
                     <input
                       name="tariff"
                       type="number"
@@ -544,7 +546,7 @@ export function PartnerManagePage({ auth }) {
 
                 <div className="form-field partner-manage-page__full">
                   <div className="partner-manage-page__tariff-ranges-head">
-                    <span>City overrides</span>
+                    <span>{t('partners.cityOverrides')}</span>
                     <button
                       type="button"
                       className="button-secondary icon-button"
@@ -562,13 +564,13 @@ export function PartnerManagePage({ auth }) {
                         <div key={overrideIndex} className="partner-manage-page__city-override-card">
                           <div className="partner-manage-page__city-override-head">
                             <label className="form-field">
-                              City
+                              {t('common.city')}
                               <select
                                 value={override.city_name}
                                 onChange={(event) => handleCityOverrideChange(overrideIndex, 'city_name', event.target.value)}
                                 required
                               >
-                                <option value="">Select city</option>
+                                <option value="">{t('partners.selectCity')}</option>
                                 {cities.map((city) => (
                                   <option key={city.id} value={city.name}>
                                     {city.name}
@@ -591,7 +593,7 @@ export function PartnerManagePage({ auth }) {
                           {form.tariff_per_kg ? (
                             <div className="partner-manage-page__city-override-ranges">
                               <div className="partner-manage-page__tariff-ranges-head">
-                                <span>Override ranges</span>
+                                <span>{t('partners.overrideRanges')}</span>
                                 <button
                                   type="button"
                                   className="button-secondary icon-button"
@@ -612,7 +614,7 @@ export function PartnerManagePage({ auth }) {
                                       step="0.01"
                                       value={range.up_to_kg}
                                       onChange={(event) => handleCityOverrideRangeChange(overrideIndex, rangeIndex, 'up_to_kg', event.target.value)}
-                                      placeholder="Up to kg"
+                                      placeholder={t('partners.upToKg')}
                                       required={form.tariff_per_kg}
                                     />
                                     <input
@@ -621,7 +623,7 @@ export function PartnerManagePage({ auth }) {
                                       step="0.01"
                                       value={range.price}
                                       onChange={(event) => handleCityOverrideRangeChange(overrideIndex, rangeIndex, 'price', event.target.value)}
-                                      placeholder="Price"
+                                      placeholder={t('partners.price')}
                                       required={form.tariff_per_kg}
                                     />
                                     <button
@@ -640,7 +642,7 @@ export function PartnerManagePage({ auth }) {
                             </div>
                           ) : (
                             <label className="form-field">
-                              Override tariff
+                              {t('partners.overrideTariff')}
                               <input
                                 type="number"
                                 min="0"
@@ -656,13 +658,13 @@ export function PartnerManagePage({ auth }) {
                     </div>
                   ) : (
                     <p className="partner-manage-page__hint">
-                      Default tariff will be used for all cities until you add an override.
+                      {t('partners.hint')}
                     </p>
                   )}
                 </div>
 
                 <label className="form-field partner-manage-page__full">
-                  Pickup address
+                  {t('partners.pickupAddress')}
                   <input
                     name="pickup_address"
                     value={form.pickup_address}
@@ -672,7 +674,7 @@ export function PartnerManagePage({ auth }) {
                 </label>
 
                 <label className="form-field">
-                  Password
+                  {t('common.password')}
                   <input
                     name="password"
                     type="password"
@@ -683,7 +685,7 @@ export function PartnerManagePage({ auth }) {
                 </label>
 
                 <label className="form-field">
-                  Confirm password
+                  {t('partners.confirmPassword')}
                   <input
                     name="password_confirmation"
                     type="password"

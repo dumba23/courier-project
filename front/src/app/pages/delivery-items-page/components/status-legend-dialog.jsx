@@ -1,4 +1,4 @@
-import { CloseIcon } from '../../../core/ui/icons.jsx'
+import { CloseIcon } from "../../../core/ui/icons.jsx";
 
 export function StatusLegendDialog({ descriptions, labels, onClose }) {
   return (
@@ -8,12 +8,12 @@ export function StatusLegendDialog({ descriptions, labels, onClose }) {
         onClick={(event) => event.stopPropagation()}
       >
         <div className="delivery-items-page__legend-head">
-          <h3>Status colors</h3>
+          <h3>სტატუსების ახსნა</h3>
           <button
             type="button"
             className="button-secondary icon-button"
             aria-label="Close status colors"
-            title="Close"
+            title="ჩახურვა"
             onClick={onClose}
           >
             <CloseIcon className="action-icon" />
@@ -35,5 +35,5 @@ export function StatusLegendDialog({ descriptions, labels, onClose }) {
         </div>
       </section>
     </div>
-  )
+  );
 }

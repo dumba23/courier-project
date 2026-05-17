@@ -1,4 +1,4 @@
-import { CloseIcon } from '../../../core/ui/icons.jsx'
+import { CloseIcon } from "../../../core/ui/icons.jsx";
 
 export function ColumnsDialog({
   columns,
@@ -14,7 +14,7 @@ export function ColumnsDialog({
         onClick={(event) => event.stopPropagation()}
       >
         <div className="delivery-items-page__legend-head">
-          <h3>Columns</h3>
+          <h3>სვეტები</h3>
           <button
             type="button"
             className="button-secondary icon-button"
@@ -28,12 +28,17 @@ export function ColumnsDialog({
 
         <div className="delivery-items-page__column-list">
           {columns.map((column) => (
-            <label key={column.key} className="delivery-items-page__column-option">
+            <label
+              key={column.key}
+              className="delivery-items-page__column-option"
+            >
               <input
                 type="checkbox"
                 checked={visibleColumns[column.key]}
                 onChange={() => onToggleColumn(column.key)}
-                disabled={visibleColumns[column.key] && visibleColumnCount === 1}
+                disabled={
+                  visibleColumns[column.key] && visibleColumnCount === 1
+                }
               />
               <span>{column.label}</span>
             </label>
@@ -41,5 +46,5 @@ export function ColumnsDialog({
         </div>
       </section>
     </div>
-  )
+  );
 }

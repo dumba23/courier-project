@@ -12,6 +12,17 @@
     gap: 14px;
   }
 
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__language-toggle {
+    min-width: 90px;
+  }
+
   &__form {
     display: grid;
     gap: 14px;

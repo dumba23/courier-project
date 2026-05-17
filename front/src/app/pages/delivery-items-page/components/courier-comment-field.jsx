@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 
 export function CourierCommentField({
   disabled,
@@ -7,13 +7,13 @@ export function CourierCommentField({
   value,
   onSave,
 }) {
-  const [draftValue, setDraftValue] = useState(value ?? '')
+  const [draftValue, setDraftValue] = useState(value ?? "");
 
   useEffect(() => {
-    setDraftValue(value ?? '')
-  }, [value])
+    setDraftValue(value ?? "");
+  }, [value]);
 
-  const isDirty = draftValue !== (value ?? '')
+  const isDirty = draftValue !== (value ?? "");
 
   return (
     <div className="courier-comment-field">
@@ -22,18 +22,20 @@ export function CourierCommentField({
           className="courier-comment-field__template-select"
           defaultValue=""
           onChange={(event) => {
-            const selectedTemplate = templates.find((template) => String(template.id) === event.target.value)
+            const selectedTemplate = templates.find(
+              (template) => String(template.id) === event.target.value,
+            );
 
             if (!selectedTemplate) {
-              return
+              return;
             }
 
-            setDraftValue(selectedTemplate.content ?? '')
-            event.target.value = ''
+            setDraftValue(selectedTemplate.content ?? "");
+            event.target.value = "";
           }}
           disabled={disabled}
         >
-          <option value="">Choose template</option>
+          <option value="">აირჩიე შაბლონი</option>
           {templates.map((template) => (
             <option key={template.id} value={template.id}>
               {template.name}
@@ -45,7 +47,7 @@ export function CourierCommentField({
         className="courier-comment-field__input"
         value={draftValue}
         onChange={(event) => setDraftValue(event.target.value)}
-        placeholder="Add courier note"
+        placeholder="დაამატე ტექსტი"
         rows={3}
         disabled={disabled}
       />
@@ -55,8 +57,8 @@ export function CourierCommentField({
         onClick={() => onSave(itemId, draftValue)}
         disabled={disabled || !isDirty}
       >
-        Save
+        შენახვა
       </button>
     </div>
-  )
+  );
 }

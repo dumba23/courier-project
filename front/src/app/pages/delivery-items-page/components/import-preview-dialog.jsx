@@ -1,5 +1,5 @@
-import { CloseIcon } from '../../../core/ui/icons.jsx'
-import { DataTable } from '../../../core/ui/data-table.jsx'
+import { CloseIcon } from "../../../core/ui/icons.jsx";
+import { DataTable } from "../../../core/ui/data-table.jsx";
 
 export function ImportPreviewDialog({
   cities,
@@ -50,15 +50,15 @@ export function ImportPreviewDialog({
           wrapperClassName="delivery-items-page__import-table-wrap"
           tableClassName="delivery-items-page__import-table"
           headers={[
-            ...(isAdmin ? ['Partner'] : []),
-            'Product',
-            'Customer',
-            'Phone',
-            'City',
-            'Address',
-            'Price',
-            'Comment',
-            'Delivery date',
+            ...(isAdmin ? ["Partner"] : []),
+            "პროდუქტი",
+            "მომხმარებელი",
+            "ტელეფონი",
+            "ქალაქი",
+            "მისამართი",
+            "ფასი",
+            "კომენტარი",
+            "გატანის თარიღი",
           ]}
           emptyMessage="No import rows."
           rows={importedItems.map((item, index) => (
@@ -66,10 +66,12 @@ export function ImportPreviewDialog({
               {isAdmin ? (
                 <td>
                   <select
-                    value={item.partner_id ?? ''}
-                    onChange={(event) => onUpdateItem(index, 'partner_id', event.target.value)}
+                    value={item.partner_id ?? ""}
+                    onChange={(event) =>
+                      onUpdateItem(index, "partner_id", event.target.value)
+                    }
                   >
-                    <option value="">Partner</option>
+                    <option value="">პარტნიორი</option>
                     {partners.map((partner) => (
                       <option key={partner.id} value={partner.id}>
                         {partner.name}
@@ -80,30 +82,38 @@ export function ImportPreviewDialog({
               ) : null}
               <td>
                 <input
-                  type={isTariffPerKgItem(item) ? 'number' : 'text'}
-                  min={isTariffPerKgItem(item) ? '0' : undefined}
-                  step={isTariffPerKgItem(item) ? '0.01' : undefined}
-                  inputMode={isTariffPerKgItem(item) ? 'decimal' : undefined}
-                  value={item.product ?? ''}
-                  onChange={(event) => onUpdateItem(index, 'product', event.target.value)}
+                  type={isTariffPerKgItem(item) ? "number" : "text"}
+                  min={isTariffPerKgItem(item) ? "0" : undefined}
+                  step={isTariffPerKgItem(item) ? "0.01" : undefined}
+                  inputMode={isTariffPerKgItem(item) ? "decimal" : undefined}
+                  value={item.product ?? ""}
+                  onChange={(event) =>
+                    onUpdateItem(index, "product", event.target.value)
+                  }
                 />
               </td>
               <td>
                 <input
-                  value={item.person_name ?? ''}
-                  onChange={(event) => onUpdateItem(index, 'person_name', event.target.value)}
+                  value={item.person_name ?? ""}
+                  onChange={(event) =>
+                    onUpdateItem(index, "person_name", event.target.value)
+                  }
                 />
               </td>
               <td>
                 <input
-                  value={item.phone ?? ''}
-                  onChange={(event) => onUpdateItem(index, 'phone', event.target.value)}
+                  value={item.phone ?? ""}
+                  onChange={(event) =>
+                    onUpdateItem(index, "phone", event.target.value)
+                  }
                 />
               </td>
               <td>
                 <select
-                  value={item.city ?? ''}
-                  onChange={(event) => onUpdateItem(index, 'city', event.target.value)}
+                  value={item.city ?? ""}
+                  onChange={(event) =>
+                    onUpdateItem(index, "city", event.target.value)
+                  }
                 >
                   <option value="">Choose city</option>
                   {cities.map((city) => (
@@ -115,8 +125,10 @@ export function ImportPreviewDialog({
               </td>
               <td>
                 <input
-                  value={item.address ?? ''}
-                  onChange={(event) => onUpdateItem(index, 'address', event.target.value)}
+                  value={item.address ?? ""}
+                  onChange={(event) =>
+                    onUpdateItem(index, "address", event.target.value)
+                  }
                 />
               </td>
               <td>
@@ -124,21 +136,27 @@ export function ImportPreviewDialog({
                   type="number"
                   min="0"
                   step="0.01"
-                  value={item.price ?? ''}
-                  onChange={(event) => onUpdateItem(index, 'price', event.target.value)}
+                  value={item.price ?? ""}
+                  onChange={(event) =>
+                    onUpdateItem(index, "price", event.target.value)
+                  }
                 />
               </td>
               <td>
                 <input
-                  value={item.comment ?? ''}
-                  onChange={(event) => onUpdateItem(index, 'comment', event.target.value)}
+                  value={item.comment ?? ""}
+                  onChange={(event) =>
+                    onUpdateItem(index, "comment", event.target.value)
+                  }
                 />
               </td>
               <td>
                 <input
                   type="date"
-                  value={item.delivery_date ?? ''}
-                  onChange={(event) => onUpdateItem(index, 'delivery_date', event.target.value)}
+                  value={item.delivery_date ?? ""}
+                  onChange={(event) =>
+                    onUpdateItem(index, "delivery_date", event.target.value)
+                  }
                 />
               </td>
             </tr>
@@ -158,12 +176,16 @@ export function ImportPreviewDialog({
             type="button"
             className="button-primary"
             onClick={onConfirm}
-            disabled={isSubmitting || !importedItems.length || Boolean(importErrors.length)}
+            disabled={
+              isSubmitting ||
+              !importedItems.length ||
+              Boolean(importErrors.length)
+            }
           >
             Confirm import
           </button>
         </div>
       </section>
     </div>
-  )
+  );
 }

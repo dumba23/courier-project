@@ -50,15 +50,15 @@ export function CreateDeliveriesDialog({
               <thead>
                 <tr>
                   <th>#</th>
-                  {isAdmin ? <th>Partner</th> : null}
-                  <th>Product</th>
-                  <th>Customer</th>
-                  <th>Phone</th>
-                  <th>City</th>
-                  <th>Address</th>
-                  <th>Price</th>
-                  <th>Comment</th>
-                  <th>Delivery date</th>
+                  {isAdmin ? <th>პარტნიორი</th> : null}
+                  <th>პროდუქტი</th>
+                  <th>მომხმარებელი</th>
+                  <th>ტელეფონი</th>
+                  <th>ქალაქი</th>
+                  <th>მისამართი</th>
+                  <th>ფასი</th>
+                  <th>კომენტარი</th>
+                  <th>გატანის თარიღი</th>
                   <th />
                 </tr>
               </thead>
@@ -93,12 +93,16 @@ export function CreateDeliveriesDialog({
                         type={isTariffPerKgItem(item) ? "number" : "text"}
                         min={isTariffPerKgItem(item) ? "0" : undefined}
                         step={isTariffPerKgItem(item) ? "0.01" : undefined}
-                        inputMode={isTariffPerKgItem(item) ? "decimal" : undefined}
+                        inputMode={
+                          isTariffPerKgItem(item) ? "decimal" : undefined
+                        }
                         value={item.product}
                         onChange={(event) =>
                           onUpdateItem(index, "product", event.target.value)
                         }
-                        placeholder={isTariffPerKgItem(item) ? "Weight / decimal" : "Product"}
+                        placeholder={
+                          isTariffPerKgItem(item) ? "წონა / თანხა" : "პროდუქტი"
+                        }
                         required
                       />
                     </td>
@@ -108,7 +112,7 @@ export function CreateDeliveriesDialog({
                         onChange={(event) =>
                           onUpdateItem(index, "person_name", event.target.value)
                         }
-                        placeholder="Customer"
+                        placeholder="მომხმარებელი"
                         required
                       />
                     </td>
@@ -118,7 +122,7 @@ export function CreateDeliveriesDialog({
                         onChange={(event) =>
                           onUpdateItem(index, "phone", event.target.value)
                         }
-                        placeholder="Phone"
+                        placeholder="ტელეფონი"
                         required
                       />
                     </td>
@@ -143,7 +147,7 @@ export function CreateDeliveriesDialog({
                         onChange={(event) =>
                           onUpdateItem(index, "address", event.target.value)
                         }
-                        placeholder="Address"
+                        placeholder="მისამართი"
                         required
                       />
                     </td>
@@ -156,7 +160,7 @@ export function CreateDeliveriesDialog({
                         onChange={(event) =>
                           onUpdateItem(index, "price", event.target.value)
                         }
-                        placeholder="Price"
+                        placeholder="ფასი"
                         required
                       />
                     </td>
@@ -166,7 +170,7 @@ export function CreateDeliveriesDialog({
                         onChange={(event) =>
                           onUpdateItem(index, "comment", event.target.value)
                         }
-                        placeholder="Comment"
+                        placeholder="კომენტარი"
                       />
                     </td>
                     <td>
@@ -188,7 +192,7 @@ export function CreateDeliveriesDialog({
                         type="button"
                         className="button-secondary icon-button"
                         aria-label="Remove row"
-                        title="Remove row"
+                        title="წაშლა"
                         onClick={() => onRemoveRow(index)}
                         disabled={draftItems.length === 1}
                       >
@@ -208,14 +212,14 @@ export function CreateDeliveriesDialog({
               onClick={onClose}
               disabled={isSubmitting}
             >
-              Cancel
+              გაუქმება
             </button>
             <button
               type="submit"
               className="button-primary"
               disabled={isSubmitting}
             >
-              Create
+              დამატება
             </button>
           </div>
         </form>

@@ -1,116 +1,122 @@
-import { useEffect, useState } from 'react'
-import { apiRequest } from '../../core/http/api.js'
-import { DataTable } from '../../core/ui/data-table.jsx'
+import { useEffect, useState } from "react";
+import { apiRequest } from "../../core/http/api.js";
+import { DataTable } from "../../core/ui/data-table.jsx";
+import { useI18n } from "../../core/i18n/i18n.context.jsx";
 import {
   CheckIcon,
   CloseIcon,
   EditIcon,
   PlusIcon,
-} from '../../core/ui/icons.jsx'
-import './district-streets-page.scss'
+} from "../../core/ui/icons.jsx";
+import "./district-streets-page.scss";
 
 const initialForm = {
-  city: 'Tbilisi',
-  district_name: '',
-  street_name: '',
-  aliases: '',
+  city: "Tbilisi",
+  district_name: "",
+  street_name: "",
+  aliases: "",
   is_active: true,
-}
+};
 
 export function DistrictStreetsPage({ auth }) {
-  const [districtStreets, setDistrictStreets] = useState([])
-  const [districts, setDistricts] = useState([])
-  const [form, setForm] = useState(initialForm)
-  const [editingDistrictStreetId, setEditingDistrictStreetId] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [status, setStatus] = useState({ type: '', message: '' })
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const { t } = useI18n();
+  const [districtStreets, setDistrictStreets] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [form, setForm] = useState(initialForm);
+  const [editingDistrictStreetId, setEditingDistrictStreetId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState({ type: "", message: "" });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     async function loadData() {
       try {
         const [streetsPayload, districtsPayload] = await Promise.all([
-          apiRequest('/api/district-streets', {
+          apiRequest("/api/district-streets", {
             token: auth?.token,
           }),
-          apiRequest('/api/districts', {
+          apiRequest("/api/districts", {
             token: auth?.token,
           }),
-        ])
+        ]);
 
-        setDistrictStreets(streetsPayload.district_streets ?? [])
-        setDistricts(districtsPayload.districts ?? [])
+        setDistrictStreets(streetsPayload.district_streets ?? []);
+        setDistricts(districtsPayload.districts ?? []);
       } catch (requestError) {
         setStatus({
-          type: 'error',
+          type: "error",
           message: requestError.message,
-        })
+        });
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
 
-    loadData()
-  }, [auth?.token])
+    loadData();
+  }, [auth?.token]);
 
   function handleChange(event) {
-    const { name, value, type, checked } = event.target
+    const { name, value, type, checked } = event.target;
 
     setForm((current) => ({
       ...current,
-      [name]: type === 'checkbox' ? checked : value,
-    }))
+      [name]: type === "checkbox" ? checked : value,
+    }));
   }
 
   function openCreateDialog() {
-    setStatus({ type: '', message: '' })
-    setEditingDistrictStreetId(null)
+    setStatus({ type: "", message: "" });
+    setEditingDistrictStreetId(null);
     setForm({
       ...initialForm,
-      district_name: districts[0]?.name ?? '',
-    })
-    setIsDialogOpen(true)
+      district_name: districts[0]?.name ?? "",
+    });
+    setIsDialogOpen(true);
   }
 
   function openEditDialog(districtStreet) {
-    setStatus({ type: '', message: '' })
-    setEditingDistrictStreetId(districtStreet.id)
+    setStatus({ type: "", message: "" });
+    setEditingDistrictStreetId(districtStreet.id);
     setForm({
-      city: districtStreet.city ?? 'Tbilisi',
-      district_name: districtStreet.district_name ?? '',
-      street_name: districtStreet.street_name ?? '',
-      aliases: Array.isArray(districtStreet.aliases) ? districtStreet.aliases.join(', ') : '',
+      city: districtStreet.city ?? "Tbilisi",
+      district_name: districtStreet.district_name ?? "",
+      street_name: districtStreet.street_name ?? "",
+      aliases: Array.isArray(districtStreet.aliases)
+        ? districtStreet.aliases.join(", ")
+        : "",
       is_active: districtStreet.is_active ?? true,
-    })
-    setIsDialogOpen(true)
+    });
+    setIsDialogOpen(true);
   }
 
   function closeDialog() {
     if (isSubmitting) {
-      return
+      return;
     }
 
-    setIsDialogOpen(false)
-    setEditingDistrictStreetId(null)
-    setForm(initialForm)
+    setIsDialogOpen(false);
+    setEditingDistrictStreetId(null);
+    setForm(initialForm);
   }
 
   async function handleSubmit(event) {
-    event.preventDefault()
-    setIsSubmitting(true)
-    setStatus({ type: '', message: '' })
+    event.preventDefault();
+    setIsSubmitting(true);
+    setStatus({ type: "", message: "" });
 
     const aliases = form.aliases
-      .split(',')
+      .split(",")
       .map((alias) => alias.trim())
-      .filter(Boolean)
+      .filter(Boolean);
 
     try {
       const payload = await apiRequest(
-        editingDistrictStreetId ? `/api/district-streets/${editingDistrictStreetId}` : '/api/district-streets',
+        editingDistrictStreetId
+          ? `/api/district-streets/${editingDistrictStreetId}`
+          : "/api/district-streets",
         {
-          method: editingDistrictStreetId ? 'PUT' : 'POST',
+          method: editingDistrictStreetId ? "PUT" : "POST",
           token: auth?.token,
           body: JSON.stringify({
             city: form.city,
@@ -120,77 +126,85 @@ export function DistrictStreetsPage({ auth }) {
             is_active: form.is_active,
           }),
         },
-      )
+      );
 
       if (editingDistrictStreetId) {
         setDistrictStreets((current) =>
           current.map((districtStreet) =>
-            districtStreet.id === payload.district_street.id ? payload.district_street : districtStreet,
+            districtStreet.id === payload.district_street.id
+              ? payload.district_street
+              : districtStreet,
           ),
-        )
+        );
       } else {
-        setDistrictStreets((current) => [payload.district_street, ...current])
+        setDistrictStreets((current) => [payload.district_street, ...current]);
       }
 
-      setForm(initialForm)
-      setEditingDistrictStreetId(null)
-      setIsDialogOpen(false)
+      setForm(initialForm);
+      setEditingDistrictStreetId(null);
+      setIsDialogOpen(false);
       setStatus({
-        type: 'success',
-        message: editingDistrictStreetId ? 'Street updated.' : 'Street added.',
-      })
+        type: "success",
+        message: editingDistrictStreetId ? t("districtStreets.updated") : t("districtStreets.added"),
+      });
     } catch (requestError) {
       setStatus({
-        type: 'error',
+        type: "error",
         message: requestError.message,
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
   return (
     <section className="district-streets-page">
       <header className="district-streets-page__header">
-        <h2 className="page-title">District Streets</h2>
+        <h2 className="page-title">{t("districtStreets.title")}</h2>
         <button
           type="button"
           className="button-primary icon-button"
           onClick={openCreateDialog}
-          aria-label="Add street"
-          title="Add street"
+          aria-label={t("districtStreets.add")}
+          title={t("districtStreets.add")}
         >
           <PlusIcon className="action-icon" />
         </button>
       </header>
 
       {status.message ? (
-        <p className={`status-message${status.type === 'error' ? ' is-error' : ''}`}>
+        <p
+          className={`status-message${status.type === "error" ? " is-error" : ""}`}
+        >
           {status.message}
         </p>
       ) : null}
 
       {isLoading ? (
-        <p className="status-message">Loading...</p>
+        <p className="status-message">იტვირთება...</p>
       ) : (
         <DataTable
           tableClassName="district-streets-table"
-          headers={['District', 'Street', 'Aliases', 'City', 'Status', '']}
-          emptyMessage="No district streets."
+          headers={[t("districtStreets.district"), t("districtStreets.street"), t("districtStreets.aliases"), t("common.city"), t("common.status"), ""]}
+          emptyMessage={t("districtStreets.empty")}
           rows={districtStreets.map((districtStreet) => (
             <tr key={districtStreet.id}>
               <td>{districtStreet.district_name}</td>
               <td>{districtStreet.street_name}</td>
-              <td>{districtStreet.aliases?.length ? districtStreet.aliases.join(', ') : '-'}</td>
+              <td>
+                {districtStreet.aliases?.length
+                  ? districtStreet.aliases.join(", ")
+                  : "-"}
+              </td>
               <td>{districtStreet.city}</td>
-              <td>{districtStreet.is_active ? 'Active' : 'Inactive'}</td>
+              <td>{districtStreet.is_active ? t("common.active") : t("common.inactive")}</td>
               <td className="district-streets-table__actions">
                 <button
                   type="button"
                   className="button-secondary icon-button"
                   onClick={() => openEditDialog(districtStreet)}
-                  aria-label={`Edit ${districtStreet.street_name}`}
-                  title={`Edit ${districtStreet.street_name}`}
+                  aria-label={`${t("common.edit")} ${districtStreet.street_name}`}
+                  title={`${t("common.edit")} ${districtStreet.street_name}`}
                 >
                   <EditIcon className="action-icon" />
                 </button>
@@ -207,20 +221,25 @@ export function DistrictStreetsPage({ auth }) {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="district-streets-page__dialog-head">
-              <h3>{editingDistrictStreetId ? 'Edit street' : 'Add street'}</h3>
+              <h3>{editingDistrictStreetId ? t("districtStreets.edit") : t("districtStreets.add")}</h3>
             </div>
 
-            <form className="district-streets-page__form" onSubmit={handleSubmit}>
+            <form
+              className="district-streets-page__form"
+              onSubmit={handleSubmit}
+            >
               <div className="field-grid district-streets-page__form-grid">
                 <label className="form-field">
-                  District
+                  {t("districtStreets.district")}
                   <select
                     name="district_name"
                     value={form.district_name}
                     onChange={handleChange}
                     required
                   >
-                    <option value="" disabled>Select district</option>
+                    <option value="" disabled>
+                      {t("districtStreets.selectDistrict")}
+                    </option>
                     {districts.map((district) => (
                       <option key={district.id} value={district.name}>
                         {district.name}
@@ -230,7 +249,7 @@ export function DistrictStreetsPage({ auth }) {
                 </label>
 
                 <label className="form-field">
-                  Street
+                  {t("districtStreets.street")}
                   <input
                     name="street_name"
                     value={form.street_name}
@@ -240,7 +259,7 @@ export function DistrictStreetsPage({ auth }) {
                 </label>
 
                 <label className="form-field">
-                  City
+                  {t("common.city")}
                   <input
                     name="city"
                     value={form.city}
@@ -270,7 +289,7 @@ export function DistrictStreetsPage({ auth }) {
                 </label>
               </div>
 
-              {status.type === 'error' && status.message ? (
+              {status.type === "error" && status.message ? (
                 <p className="status-message is-error">{status.message}</p>
               ) : null}
 
@@ -289,11 +308,17 @@ export function DistrictStreetsPage({ auth }) {
                   type="submit"
                   className="button-primary icon-button"
                   disabled={isSubmitting}
-                  aria-label={editingDistrictStreetId ? 'Update street' : 'Save street'}
-                  title={editingDistrictStreetId ? 'Update street' : 'Save street'}
+                  aria-label={
+                    editingDistrictStreetId ? "Update street" : "Save street"
+                  }
+                  title={
+                    editingDistrictStreetId ? "Update street" : "Save street"
+                  }
                 >
                   {!isSubmitting ? <CheckIcon className="action-icon" /> : null}
-                  {isSubmitting ? <span className="icon-button__status" /> : null}
+                  {isSubmitting ? (
+                    <span className="icon-button__status" />
+                  ) : null}
                 </button>
               </div>
             </form>
@@ -301,5 +326,5 @@ export function DistrictStreetsPage({ auth }) {
         </div>
       ) : null}
     </section>
-  )
+  );
 }

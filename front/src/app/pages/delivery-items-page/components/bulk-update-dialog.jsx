@@ -1,11 +1,11 @@
-import { CloseIcon } from '../../../core/ui/icons.jsx'
+import { CloseIcon } from "../../../core/ui/icons.jsx";
 import {
   BULK_ACTION_ACTUAL_DELIVERY_DATE,
   BULK_ACTION_COURIER,
   BULK_ACTION_DELIVERY_DATE,
   BULK_ACTION_STATUS,
   STATUS_OPTIONS,
-} from '../delivery-items.constants.js'
+} from "../delivery-items.constants.js";
 
 export function BulkUpdateDialog({
   bulkDialogType,
@@ -18,15 +18,16 @@ export function BulkUpdateDialog({
   statusOptions,
   onValueChange,
 }) {
-  const bulkDialogTitle = bulkDialogType === BULK_ACTION_STATUS
-    ? 'Update filtered statuses'
-    : bulkDialogType === BULK_ACTION_COURIER
-      ? 'Update filtered courier'
-    : bulkDialogType === BULK_ACTION_DELIVERY_DATE
-      ? 'Update filtered delivery date'
-      : bulkDialogType === BULK_ACTION_ACTUAL_DELIVERY_DATE
-        ? 'Update filtered completion date'
-      : 'Update filtered return date'
+  const bulkDialogTitle =
+    bulkDialogType === BULK_ACTION_STATUS
+      ? "Update filtered statuses"
+      : bulkDialogType === BULK_ACTION_COURIER
+        ? "Update filtered courier"
+        : bulkDialogType === BULK_ACTION_DELIVERY_DATE
+          ? "Update filtered delivery date"
+          : bulkDialogType === BULK_ACTION_ACTUAL_DELIVERY_DATE
+            ? "Update filtered completion date"
+            : "Update filtered return date";
 
   return (
     <div className="dialog-backdrop" onClick={onClose}>
@@ -50,14 +51,18 @@ export function BulkUpdateDialog({
         <form className="delivery-items-page__bulk-form" onSubmit={onSubmit}>
           <p className="delivery-items-page__bulk-copy">
             {metaTotal
-              ? `This will update ${metaTotal} filtered delivery items.`
-              : 'No filtered delivery items are currently available.'}
+              ? `ეს განაახლებს ${metaTotal} გაფილტრულ მიწოდების ერთეულებს.`
+              : "ამჟამად გაფილტრული მიწოდების ერთეულები არ არის ხელმისაწვდომი."}
           </p>
 
           {bulkDialogType === BULK_ACTION_STATUS ? (
             <label className="form-field">
-              Status
-              <select value={bulkValue} onChange={(event) => onValueChange(event.target.value)} required>
+              სტატუსი
+              <select
+                value={bulkValue}
+                onChange={(event) => onValueChange(event.target.value)}
+                required
+              >
                 {statusOptions.map(([status, label]) => (
                   <option key={status} value={status}>
                     {label}
@@ -68,7 +73,10 @@ export function BulkUpdateDialog({
           ) : bulkDialogType === BULK_ACTION_COURIER ? (
             <label className="form-field">
               Courier
-              <select value={bulkValue} onChange={(event) => onValueChange(event.target.value)}>
+              <select
+                value={bulkValue}
+                onChange={(event) => onValueChange(event.target.value)}
+              >
                 <option value="">Unassigned</option>
                 {couriers.map((courier) => (
                   <option key={courier.id} value={courier.id}>
@@ -79,7 +87,7 @@ export function BulkUpdateDialog({
             </label>
           ) : (
             <label className="form-field">
-              Date
+              თარიღი
               <input
                 type="date"
                 value={bulkValue}
@@ -96,18 +104,18 @@ export function BulkUpdateDialog({
               onClick={onClose}
               disabled={isSubmitting}
             >
-              Cancel
+              გაუქმება
             </button>
             <button
               type="submit"
               className="button-primary"
               disabled={isSubmitting || !metaTotal}
             >
-              Confirm
+              დასტური
             </button>
           </div>
         </form>
       </section>
     </div>
-  )
+  );
 }

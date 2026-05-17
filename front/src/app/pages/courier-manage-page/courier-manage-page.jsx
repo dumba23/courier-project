@@ -1,109 +1,111 @@
-import { useEffect, useState } from 'react'
-import { apiRequest } from '../../core/http/api.js'
-import { DataTable } from '../../core/ui/data-table.jsx'
+import { useEffect, useState } from "react";
+import { apiRequest } from "../../core/http/api.js";
+import { useI18n } from "../../core/i18n/i18n.context.jsx";
+import { DataTable } from "../../core/ui/data-table.jsx";
 import {
   CheckIcon,
   CloseIcon,
   EditIcon,
   PlusIcon,
-} from '../../core/ui/icons.jsx'
-import './courier-manage-page.scss'
+} from "../../core/ui/icons.jsx";
+import "./courier-manage-page.scss";
 
 const initialForm = {
-  first_name: '',
-  last_name: '',
-  phone_number: '',
-  car_plate_number: '',
-  tariff: '',
-  email: '',
-  password: '',
-  password_confirmation: '',
-}
+  first_name: "",
+  last_name: "",
+  phone_number: "",
+  car_plate_number: "",
+  tariff: "",
+  email: "",
+  password: "",
+  password_confirmation: "",
+};
 
 export function CourierManagePage({ auth }) {
-  const [couriers, setCouriers] = useState([])
-  const [form, setForm] = useState(initialForm)
-  const [editingCourierId, setEditingCourierId] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [status, setStatus] = useState({ type: '', message: '' })
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const { t } = useI18n();
+  const [couriers, setCouriers] = useState([]);
+  const [form, setForm] = useState(initialForm);
+  const [editingCourierId, setEditingCourierId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState({ type: "", message: "" });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     async function loadCouriers() {
       try {
-        const payload = await apiRequest('/api/couriers', {
+        const payload = await apiRequest("/api/couriers", {
           token: auth?.token,
-        })
+        });
 
-        setCouriers(payload.couriers ?? [])
+        setCouriers(payload.couriers ?? []);
       } catch (requestError) {
         setStatus({
-          type: 'error',
+          type: "error",
           message: requestError.message,
-        })
+        });
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
 
-    loadCouriers()
-  }, [auth?.token])
+    loadCouriers();
+  }, [auth?.token]);
 
   function handleChange(event) {
-    const { name, value } = event.target
+    const { name, value } = event.target;
 
     setForm((current) => ({
       ...current,
       [name]: value,
-    }))
+    }));
   }
 
   function openCreateDialog() {
-    setStatus({ type: '', message: '' })
-    setEditingCourierId(null)
-    setForm(initialForm)
-    setIsDialogOpen(true)
+    setStatus({ type: "", message: "" });
+    setEditingCourierId(null);
+    setForm(initialForm);
+    setIsDialogOpen(true);
   }
 
   function openEditDialog(courier) {
-    setStatus({ type: '', message: '' })
-    setEditingCourierId(courier.id)
+    setStatus({ type: "", message: "" });
+    setEditingCourierId(courier.id);
     setForm({
-      first_name: courier.first_name ?? '',
-      last_name: courier.last_name ?? '',
-      phone_number: courier.phone_number ?? '',
-      car_plate_number: courier.car_plate_number ?? '',
-      tariff: courier.tariff ?? '',
-      email: courier.user?.email ?? '',
-      password: '',
-      password_confirmation: '',
-    })
-    setIsDialogOpen(true)
+      first_name: courier.first_name ?? "",
+      last_name: courier.last_name ?? "",
+      phone_number: courier.phone_number ?? "",
+      car_plate_number: courier.car_plate_number ?? "",
+      tariff: courier.tariff ?? "",
+      email: courier.user?.email ?? "",
+      password: "",
+      password_confirmation: "",
+    });
+    setIsDialogOpen(true);
   }
 
   function closeDialog() {
     if (isSubmitting) {
-      return
+      return;
     }
 
-    setIsDialogOpen(false)
-    setEditingCourierId(null)
-    setForm(initialForm)
+    setIsDialogOpen(false);
+    setEditingCourierId(null);
+    setForm(initialForm);
   }
 
   async function handleSubmit(event) {
-    event.preventDefault()
-    setIsSubmitting(true)
-    setStatus({ type: '', message: '' })
+    event.preventDefault();
+    setIsSubmitting(true);
+    setStatus({ type: "", message: "" });
 
-    const isEditing = Boolean(editingCourierId)
+    const isEditing = Boolean(editingCourierId);
 
     try {
       const payload = await apiRequest(
-        isEditing ? `/api/couriers/${editingCourierId}` : '/api/couriers',
+        isEditing ? `/api/couriers/${editingCourierId}` : "/api/couriers",
         {
-          method: isEditing ? 'PUT' : 'POST',
+          method: isEditing ? "PUT" : "POST",
           token: auth?.token,
           body: JSON.stringify({
             ...form,
@@ -111,79 +113,90 @@ export function CourierManagePage({ auth }) {
             password_confirmation: form.password_confirmation || null,
           }),
         },
-      )
+      );
 
       if (isEditing) {
         setCouriers((current) =>
           current.map((courier) =>
             courier.id === payload.courier.id ? payload.courier : courier,
           ),
-        )
+        );
       } else {
-        setCouriers((current) => [payload.courier, ...current])
+        setCouriers((current) => [payload.courier, ...current]);
       }
 
-      setForm(initialForm)
-      setEditingCourierId(null)
-      setIsDialogOpen(false)
+      setForm(initialForm);
+      setEditingCourierId(null);
+      setIsDialogOpen(false);
       setStatus({
-        type: 'success',
-        message: isEditing ? 'Courier updated.' : 'Courier created.',
-      })
+        type: "success",
+        message: isEditing ? t("couriers.updated") : t("couriers.created"),
+      });
     } catch (requestError) {
       setStatus({
-        type: 'error',
+        type: "error",
         message: requestError.message,
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
-  const isEditing = Boolean(editingCourierId)
+  const isEditing = Boolean(editingCourierId);
 
   return (
     <section className="courier-manage-page">
       <header className="courier-manage-page__header">
-        <h2 className="page-title">Couriers</h2>
+        <h2 className="page-title">{t("couriers.title")}</h2>
         <button
           type="button"
           className="button-primary icon-button"
           onClick={openCreateDialog}
-          aria-label="Add courier"
-          title="Add courier"
+          aria-label={t("couriers.add")}
+          title={t("couriers.add")}
         >
           <PlusIcon className="action-icon" />
         </button>
       </header>
 
       {status.message ? (
-        <p className={`status-message${status.type === 'error' ? ' is-error' : ''}`}>
+        <p
+          className={`status-message${status.type === "error" ? " is-error" : ""}`}
+        >
           {status.message}
         </p>
       ) : null}
 
       {isLoading ? (
-        <p className="status-message">Loading...</p>
+        <p className="status-message">{t("common.loading")}</p>
       ) : (
         <DataTable
           tableClassName="courier-table"
-          headers={['Name', 'Email', 'Phone', 'Plate', 'Tariff', '']}
-          emptyMessage="No couriers."
+          headers={[
+            t("common.name"),
+            t("common.email"),
+            t("common.phone"),
+            t("couriers.carPlate"),
+            t("couriers.tariff"),
+            "",
+          ]}
+          emptyMessage={t("couriers.empty")}
           rows={couriers.map((courier) => (
             <tr key={courier.id}>
-              <td>{courier.first_name} {courier.last_name}</td>
+              <td>
+                {courier.first_name} {courier.last_name}
+              </td>
               <td>{courier.user?.email}</td>
               <td>{courier.phone_number}</td>
-              <td>{courier.car_plate_number || '-'}</td>
+              <td>{courier.car_plate_number || "-"}</td>
               <td>{courier.tariff}</td>
               <td className="courier-table__actions">
                 <button
                   type="button"
                   className="button-secondary courier-table__edit icon-button"
                   onClick={() => openEditDialog(courier)}
-                  aria-label={`Edit ${courier.first_name} ${courier.last_name}`}
-                  title={`Edit ${courier.first_name} ${courier.last_name}`}
+                  aria-label={`${t("common.edit")} ${courier.first_name} ${courier.last_name}`}
+                  title={`${t("common.edit")} ${courier.first_name} ${courier.last_name}`}
                 >
                   <EditIcon className="action-icon" />
                 </button>
@@ -200,11 +213,11 @@ export function CourierManagePage({ auth }) {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="courier-manage-page__dialog-head">
-              <h3>{isEditing ? 'Edit courier' : 'Add courier'}</h3>
+              <h3>{isEditing ? t("couriers.edit") : t("couriers.add")}</h3>
               <p>
                 {isEditing
-                  ? 'Leave password empty to keep the current password.'
-                  : 'Set the password for this courier account.'}
+                  ? t("couriers.leavePassword")
+                  : t("couriers.setPassword")}
               </p>
             </div>
 
@@ -296,7 +309,7 @@ export function CourierManagePage({ auth }) {
                 </label>
               </div>
 
-              {status.type === 'error' && status.message ? (
+              {status.type === "error" && status.message ? (
                 <p className="status-message is-error">{status.message}</p>
               ) : null}
 
@@ -315,11 +328,13 @@ export function CourierManagePage({ auth }) {
                   type="submit"
                   className="button-primary icon-button"
                   disabled={isSubmitting}
-                  aria-label={isEditing ? 'Update courier' : 'Save courier'}
-                  title={isEditing ? 'Update courier' : 'Save courier'}
+                  aria-label={isEditing ? "Update courier" : "Save courier"}
+                  title={isEditing ? "Update courier" : "Save courier"}
                 >
                   {!isSubmitting ? <CheckIcon className="action-icon" /> : null}
-                  {isSubmitting ? <span className="icon-button__status" /> : null}
+                  {isSubmitting ? (
+                    <span className="icon-button__status" />
+                  ) : null}
                 </button>
               </div>
             </form>
@@ -327,5 +342,5 @@ export function CourierManagePage({ auth }) {
         </div>
       ) : null}
     </section>
-  )
+  );
 }

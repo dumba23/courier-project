@@ -1,4 +1,12 @@
-import { ColumnsIcon, DownloadIcon, InfoIcon, MapPinIcon, PlusIcon, UploadIcon } from '../../../core/ui/icons.jsx'
+import {
+  ColumnsIcon,
+  DownloadIcon,
+  InfoIcon,
+  MapPinIcon,
+  PlusIcon,
+  UploadIcon,
+} from "../../../core/ui/icons.jsx";
+import { useI18n } from "../../../core/i18n/i18n.context.jsx";
 
 export function DeliveryItemsHeader({
   canCreateItems,
@@ -7,7 +15,7 @@ export function DeliveryItemsHeader({
   isAssigningDistricts,
   isMultipleDistrictsFilterActive,
   isRefreshing,
-  title = 'Deliveries',
+  title = "მიწოდებები",
   onAssignDistricts,
   onDownloadTemplate,
   onOpenColumns,
@@ -17,6 +25,8 @@ export function DeliveryItemsHeader({
   onImportFileChange,
   onToggleMultipleDistrictsFilter,
 }) {
+  const { t } = useI18n()
+
   return (
     <header className="delivery-items-page__header">
       <div className="delivery-items-page__header-main">
@@ -24,22 +34,24 @@ export function DeliveryItemsHeader({
         <button
           type="button"
           className={`button-secondary delivery-items-page__header-filter${
-            isMultipleDistrictsFilterActive ? ' is-active' : ''
+            isMultipleDistrictsFilterActive ? " is-active" : ""
           }`}
           onClick={onToggleMultipleDistrictsFilter}
         >
-          Multiple districts
+          {t("deliveryItems.multiDistricts")}
         </button>
       </div>
       <div className="delivery-items-page__header-actions">
-        {isRefreshing ? <span className="delivery-items-page__refreshing">Updating...</span> : null}
+        {isRefreshing ? (
+          <span className="delivery-items-page__refreshing">{t("deliveryItems.updating")}</span>
+        ) : null}
         {isAdmin ? (
           <button
             type="button"
             className="button-secondary icon-button delivery-items-page__toolbar-button"
-            aria-label="Assign districts to filtered deliveries"
-            title="Assign districts to filtered deliveries"
-            data-tooltip="Assign districts to filtered deliveries"
+            aria-label={t("deliveryItems.assignDistricts")}
+            title={t("deliveryItems.assignDistricts")}
+            data-tooltip={t("deliveryItems.assignDistricts")}
             disabled={isAssigningDistricts}
             onClick={onAssignDistricts}
           >
@@ -58,9 +70,9 @@ export function DeliveryItemsHeader({
             <button
               type="button"
               className="button-secondary icon-button delivery-items-page__toolbar-button"
-              aria-label="Download import template"
-              title="Download import template"
-              data-tooltip="Download import template"
+              aria-label={t("deliveryItems.downloadTemplate")}
+              title={t("deliveryItems.downloadTemplate")}
+              data-tooltip={t("deliveryItems.downloadTemplate")}
               onClick={onDownloadTemplate}
             >
               <DownloadIcon className="action-icon" />
@@ -68,9 +80,9 @@ export function DeliveryItemsHeader({
             <button
               type="button"
               className="button-secondary icon-button delivery-items-page__toolbar-button"
-              aria-label="Import delivery items"
-              title="Import delivery items"
-              data-tooltip="Import delivery items"
+              aria-label={t("deliveryItems.import")}
+              title={t("deliveryItems.import")}
+              data-tooltip={t("deliveryItems.import")}
               onClick={onOpenImportPicker}
             >
               <UploadIcon className="action-icon" />
@@ -78,9 +90,9 @@ export function DeliveryItemsHeader({
             <button
               type="button"
               className="button-primary icon-button delivery-items-page__toolbar-button"
-              aria-label="Add delivery items"
-              title="Add delivery items"
-              data-tooltip="Add delivery items"
+              aria-label={t("deliveryItems.add")}
+              title={t("deliveryItems.add")}
+              data-tooltip={t("deliveryItems.add")}
               onClick={onOpenCreate}
             >
               <PlusIcon className="action-icon" />
@@ -90,9 +102,9 @@ export function DeliveryItemsHeader({
         <button
           type="button"
           className="button-secondary icon-button delivery-items-page__toolbar-button"
-          aria-label="Column settings"
-          title="Column settings"
-          data-tooltip="Column settings"
+          aria-label={t("deliveryItems.columnSettings")}
+          title={t("deliveryItems.columnSettings")}
+          data-tooltip={t("deliveryItems.columnSettings")}
           onClick={onOpenColumns}
         >
           <ColumnsIcon className="action-icon" />
@@ -100,14 +112,14 @@ export function DeliveryItemsHeader({
         <button
           type="button"
           className="button-secondary icon-button delivery-items-page__toolbar-button"
-          aria-label="Status colors"
-          title="Status colors"
-          data-tooltip="Status colors"
+          aria-label={t("deliveryItems.statusColors")}
+          title={t("deliveryItems.statusColors")}
+          data-tooltip={t("deliveryItems.statusColors")}
           onClick={onOpenLegend}
         >
           <InfoIcon className="action-icon" />
         </button>
       </div>
     </header>
-  )
+  );
 }

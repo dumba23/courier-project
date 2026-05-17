@@ -14,7 +14,7 @@ export function DeliveredStatusDialog({
         onClick={(event) => event.stopPropagation()}
       >
         <div className="delivery-items-page__legend-head">
-          <h3>დელივერდის დეტალები</h3>
+          <h3>დელივერის დეტალები</h3>
           <button
             type="button"
             className="button-secondary"
@@ -34,7 +34,9 @@ export function DeliveredStatusDialog({
               step="0.01"
               inputMode="decimal"
               value={transferredAmount}
-              onChange={(event) => onTransferredAmountChange(event.target.value)}
+              onChange={(event) =>
+                onTransferredAmountChange(event.target.value)
+              }
             />
           </label>
 
@@ -64,11 +66,11 @@ export function DeliveredStatusDialog({
               className="button-primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'ინახება...' : 'დადასტურება'}
+              {isSubmitting ? "ინახება..." : "დადასტურება"}
             </button>
           </div>
         </form>
       </section>
     </div>
-  )
+  );
 }

@@ -1,13 +1,25 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { apiRequest } from '../../http/api.js'
-import { CloseIcon } from '../../ui/icons.jsx'
+import { useI18n } from '../../i18n/i18n.context.jsx'
+import {
+  BuildingIcon,
+  CloseIcon,
+  MapPinIcon,
+  NoteIcon,
+  PackageIcon,
+  RoadIcon,
+  UserIcon,
+  UsersIcon,
+  WalletIcon,
+} from '../../ui/icons.jsx'
 import './dashboard-layout.scss'
 
 export function DashboardLayout({ auth, onAuthChange }) {
   const navigate = useNavigate()
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const isAdmin = auth?.user?.role === 'admin'
+  const { language, setLanguage, t } = useI18n()
 
   async function handleLogout() {
     try {
@@ -33,7 +45,7 @@ export function DashboardLayout({ auth, onAuthChange }) {
             type="button"
             className="sidebar-toggle"
             onClick={() => setIsSidebarOpen((current) => !current)}
-            aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+            aria-label={isSidebarOpen ? t('common.closeSidebar') : t('common.openSidebar')}
             aria-expanded={isSidebarOpen}
           >
             <span />
@@ -51,19 +63,30 @@ export function DashboardLayout({ auth, onAuthChange }) {
           <span className="dashboard-layout__role">{auth?.user?.role}</span>
         </div>
 
-        <button type="button" className="button-secondary" onClick={handleLogout}>
-          Log out
-        </button>
+        <div className="dashboard-layout__topbar-actions">
+          <button
+            type="button"
+            className="button-secondary dashboard-layout__language-toggle"
+            onClick={() => setLanguage(language === 'ka' ? 'en' : 'ka')}
+            aria-label={language === 'ka' ? t('lang.switchToEn') : t('lang.switchToKa')}
+            title={language === 'ka' ? t('lang.switchToEn') : t('lang.switchToKa')}
+          >
+            {language === 'ka' ? t('lang.en') : t('lang.ka')}
+          </button>
+          <button type="button" className="button-secondary" onClick={handleLogout}>
+            {t('nav.logout')}
+          </button>
+        </div>
       </header>
 
       <aside className="dashboard-layout__sidebar">
         <div className="dashboard-layout__sidebar-head">
-          <div className="dashboard-layout__sidebar-title">Navigation</div>
+          <div className="dashboard-layout__sidebar-title">{t('nav.navigation')}</div>
           <button
             type="button"
             className="button-secondary icon-button dashboard-layout__sidebar-close"
-            aria-label="Close sidebar"
-            title="Close sidebar"
+            aria-label={t('common.closeSidebar')}
+            title={t('common.closeSidebar')}
             onClick={() => setIsSidebarOpen(false)}
           >
             <CloseIcon className="action-icon" />
@@ -75,14 +98,16 @@ export function DashboardLayout({ auth, onAuthChange }) {
             to="/delivery-items"
             onClick={() => setIsSidebarOpen(false)}
           >
-            Deliveries
+            <PackageIcon className="nav-link__icon" />
+            {t('nav.deliveries')}
           </NavLink>
           <NavLink
             className="nav-link nav-link--sidebar"
             to="/canceled-delivery-items"
             onClick={() => setIsSidebarOpen(false)}
           >
-            Canceled
+            <CloseIcon className="nav-link__icon" />
+            {t('nav.canceled')}
           </NavLink>
           {isAdmin ? (
             <>
@@ -91,56 +116,64 @@ export function DashboardLayout({ auth, onAuthChange }) {
                 to="/couriers"
                 onClick={() => setIsSidebarOpen(false)}
               >
-                Couriers
+                <UserIcon className="nav-link__icon" />
+                {t('nav.couriers')}
               </NavLink>
               <NavLink
                 className="nav-link nav-link--sidebar"
                 to="/partners"
                 onClick={() => setIsSidebarOpen(false)}
               >
-                Partners
+                <UsersIcon className="nav-link__icon" />
+                {t('nav.partners')}
               </NavLink>
               <NavLink
                 className="nav-link nav-link--sidebar"
                 to="/courier-payroll"
                 onClick={() => setIsSidebarOpen(false)}
               >
-                Courier payroll
+                <WalletIcon className="nav-link__icon" />
+                {t('nav.courierPayroll')}
               </NavLink>
               <NavLink
                 className="nav-link nav-link--sidebar"
                 to="/partner-payroll"
                 onClick={() => setIsSidebarOpen(false)}
               >
-                Partner payroll
+                <WalletIcon className="nav-link__icon" />
+                {t('nav.partnerPayroll')}
               </NavLink>
               <NavLink
                 className="nav-link nav-link--sidebar"
                 to="/courier-comment-templates"
                 onClick={() => setIsSidebarOpen(false)}
               >
-                Comment templates
+                <NoteIcon className="nav-link__icon" />
+                {t('nav.commentTemplates')}
               </NavLink>
               <NavLink
                 className="nav-link nav-link--sidebar"
                 to="/districts"
                 onClick={() => setIsSidebarOpen(false)}
               >
-                Districts
+                <MapPinIcon className="nav-link__icon" />
+                {t('nav.districts')}
               </NavLink>
               <NavLink
                 className="nav-link nav-link--sidebar"
                 to="/cities"
                 onClick={() => setIsSidebarOpen(false)}
               >
-                Cities
+                <BuildingIcon className="nav-link__icon" />
+                {t('nav.cities')}
               </NavLink>
               <NavLink
                 className="nav-link nav-link--sidebar"
                 to="/district-streets"
                 onClick={() => setIsSidebarOpen(false)}
               >
-                Streets
+                <RoadIcon className="nav-link__icon" />
+                {t('nav.streets')}
               </NavLink>
             </>
           ) : null}
@@ -150,7 +183,7 @@ export function DashboardLayout({ auth, onAuthChange }) {
       <button
         type="button"
         className={`dashboard-layout__backdrop${isSidebarOpen ? ' is-visible' : ''}`}
-        aria-label="Close sidebar"
+        aria-label={t('common.closeSidebar')}
         onClick={() => setIsSidebarOpen(false)}
       />
 

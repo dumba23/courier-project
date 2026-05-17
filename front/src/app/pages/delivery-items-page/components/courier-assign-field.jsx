@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { MobileOptionSelect, useIsMobile } from './mobile-option-select.jsx'
+import { useEffect, useMemo, useRef, useState } from "react";
+import { MobileOptionSelect, useIsMobile } from "./mobile-option-select.jsx";
 
 function getCourierLabel(courier) {
-  return `${courier.first_name} ${courier.last_name}`.trim()
+  return `${courier.first_name} ${courier.last_name}`.trim();
 }
 
 export function CourierAssignField({
@@ -12,109 +12,115 @@ export function CourierAssignField({
   selectedCourierId,
   onAssign,
 }) {
-  const isMobile = useIsMobile()
-  const wrapperRef = useRef(null)
+  const isMobile = useIsMobile();
+  const wrapperRef = useRef(null);
   const selectedCourier = useMemo(
-    () => couriers.find((courier) => String(courier.id) === String(selectedCourierId ?? '')) ?? null,
+    () =>
+      couriers.find(
+        (courier) => String(courier.id) === String(selectedCourierId ?? ""),
+      ) ?? null,
     [couriers, selectedCourierId],
-  )
-  const selectedLabel = selectedCourier ? getCourierLabel(selectedCourier) : ''
-  const [query, setQuery] = useState(selectedLabel)
-  const [isOpen, setIsOpen] = useState(false)
+  );
+  const selectedLabel = selectedCourier ? getCourierLabel(selectedCourier) : "";
+  const [query, setQuery] = useState(selectedLabel);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    setQuery(selectedLabel)
-  }, [selectedLabel])
+    setQuery(selectedLabel);
+  }, [selectedLabel]);
 
   useEffect(() => {
     if (!isOpen) {
-      return undefined
+      return undefined;
     }
 
     function handleOutsideClick(event) {
       if (!wrapperRef.current?.contains(event.target)) {
-        setIsOpen(false)
-        setQuery(selectedLabel)
+        setIsOpen(false);
+        setQuery(selectedLabel);
       }
     }
 
-    document.addEventListener('mousedown', handleOutsideClick)
+    document.addEventListener("mousedown", handleOutsideClick);
 
     return () => {
-      document.removeEventListener('mousedown', handleOutsideClick)
-    }
-  }, [isOpen, selectedLabel])
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isOpen, selectedLabel]);
 
   const suggestions = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase()
+    const normalizedQuery = query.trim().toLowerCase();
 
     if (!normalizedQuery) {
-      return couriers
+      return couriers;
     }
 
-    return couriers.filter((courier) => getCourierLabel(courier).toLowerCase().includes(normalizedQuery))
-  }, [couriers, query])
+    return couriers.filter((courier) =>
+      getCourierLabel(courier).toLowerCase().includes(normalizedQuery),
+    );
+  }, [couriers, query]);
 
   async function commitValue(nextValue) {
-    setIsOpen(false)
-    setQuery(nextValue ? getCourierLabel(nextValue) : '')
-    await onAssign(itemId, nextValue ? String(nextValue.id) : '')
+    setIsOpen(false);
+    setQuery(nextValue ? getCourierLabel(nextValue) : "");
+    await onAssign(itemId, nextValue ? String(nextValue.id) : "");
   }
 
   function handleBlur() {
     window.setTimeout(() => {
       if (!wrapperRef.current?.contains(document.activeElement)) {
-        setIsOpen(false)
-        setQuery(selectedLabel)
+        setIsOpen(false);
+        setQuery(selectedLabel);
       }
-    }, 0)
+    }, 0);
   }
 
   function handleKeyDown(event) {
-    if (event.key === 'Escape') {
-      setIsOpen(false)
-      setQuery(selectedLabel)
-      event.currentTarget.blur()
-      return
+    if (event.key === "Escape") {
+      setIsOpen(false);
+      setQuery(selectedLabel);
+      event.currentTarget.blur();
+      return;
     }
 
-    if (event.key !== 'Enter') {
-      return
+    if (event.key !== "Enter") {
+      return;
     }
 
-    event.preventDefault()
+    event.preventDefault();
 
     if (!query.trim()) {
-      commitValue(null)
-      return
+      commitValue(null);
+      return;
     }
 
-    const exactMatch = couriers.find((courier) => (
-      getCourierLabel(courier).toLowerCase() === query.trim().toLowerCase()
-    ))
+    const exactMatch = couriers.find(
+      (courier) =>
+        getCourierLabel(courier).toLowerCase() === query.trim().toLowerCase(),
+    );
 
     if (exactMatch) {
-      commitValue(exactMatch)
-      return
+      commitValue(exactMatch);
+      return;
     }
 
     if (suggestions.length === 1) {
-      commitValue(suggestions[0])
-      return
+      commitValue(suggestions[0]);
+      return;
     }
 
-    setQuery(selectedLabel)
-    setIsOpen(false)
+    setQuery(selectedLabel);
+    setIsOpen(false);
   }
 
   if (isMobile) {
     const options = [
-      { value: '', label: 'Unassigned' },
+      { value: "", label: "Unassigned" },
       ...couriers.map((courier) => ({
         value: String(courier.id),
         label: getCourierLabel(courier),
       })),
-    ]
+    ];
 
     return (
       <MobileOptionSelect
@@ -122,10 +128,10 @@ export function CourierAssignField({
         label="Select courier"
         options={options}
         placeholder="Unassigned"
-        value={selectedCourierId ?? ''}
+        value={selectedCourierId ?? ""}
         onChange={(nextValue) => onAssign(itemId, nextValue)}
       />
-    )
+    );
   }
 
   return (
@@ -135,12 +141,12 @@ export function CourierAssignField({
         className="delivery-items-table__status-select courier-assign-field__input"
         value={query}
         onChange={(event) => {
-          setQuery(event.target.value)
-          setIsOpen(true)
+          setQuery(event.target.value);
+          setIsOpen(true);
         }}
         onFocus={() => setIsOpen(true)}
         onKeyDown={handleKeyDown}
-        placeholder="Type courier name"
+        placeholder="ჩაწერე კურიერის სახელი"
         autoComplete="off"
         disabled={disabled}
       />
@@ -153,7 +159,7 @@ export function CourierAssignField({
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => commitValue(null)}
           >
-            Unassigned
+            არ არის მიბმული
           </button>
           {suggestions.length ? (
             suggestions.map((courier) => (
@@ -161,7 +167,9 @@ export function CourierAssignField({
                 key={courier.id}
                 type="button"
                 className={`courier-assign-field__option${
-                  String(courier.id) === String(selectedCourierId ?? '') ? ' is-selected' : ''
+                  String(courier.id) === String(selectedCourierId ?? "")
+                    ? " is-selected"
+                    : ""
                 }`}
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => commitValue(courier)}
@@ -170,10 +178,12 @@ export function CourierAssignField({
               </button>
             ))
           ) : (
-            <div className="courier-assign-field__empty">No matching couriers</div>
+            <div className="courier-assign-field__empty">
+              კურიერები არ მოიძებნა
+            </div>
           )}
         </div>
       ) : null}
     </div>
-  )
+  );
 }
